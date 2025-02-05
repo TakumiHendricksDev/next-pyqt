@@ -1,43 +1,24 @@
 <html>
 <style>
+    .title {
+        font-size: 20px;
+        font-weight: bold;
+    }
     button {
         background-color: #4CAF50;
         color: white;
-        padding: 10px;
-        border-radius: 5px;
-    }
-
-    label {
-        color: #333;
-        font-size: 14px;
-    }
-
-    input {
-        padding: 5px;
-        border: 1px solid #ddd;
-    }
-
-    .important {
-        color: red;
-        font-weight: bold;
-    }
-
-    #submit-button {
-        background-color: #008CBA;
-    }
-
-    .container {
-        padding: 20px;
-        background-color: #f0f0f0;
+        padding: 5px 10px;
+        margin: 0 5px;
     }
 </style>
 <body>
-    <div class="container">
-        <label class="important">Welcome to my app!</label>
-        <div>
-            <input type="text" value="Enter text here" style="background-color: #fff; color: black;"/>
-            <button id="submit-button">Submit</button>
-        </div>
+    <!-- Include components using the component tag -->
+    <component name="header"></component>
+    <component name="nav"></component>
+
+    <div class="content">
+        <label>Main Content Area</label>
+        <input type="text" value="Enter something..."/>
     </div>
 </body>
 </html>
