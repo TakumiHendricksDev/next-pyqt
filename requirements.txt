@@ -1,0 +1,5 @@
+PyQt6==6.8.0
+PyQt6-Qt6==6.8.1
+PyQt6_sip==13.10.0
+setuptools==75.8.0
+wheel==0.45.1
