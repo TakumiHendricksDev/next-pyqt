@@ -6,8 +6,7 @@ class App(PyComponent):
         super().__init__(*args, **kwargs)
         self.template_path = 'templates/index.html'
         self.state = {
-            'todos': [
-            ],
+            'todos': [],
             'new_todo': ''
         }
         self.components = {
