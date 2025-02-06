@@ -9,7 +9,7 @@ from elements import (
 
 
 class HTMLRenderer(QWidget):
-    def __init__(self, html_content):
+    def __init__(self, template):
         super().__init__()
 
         # Set up the window
@@ -31,11 +31,26 @@ class HTMLRenderer(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
 
+        self.element_widget_map = {}
+
+        self.template = template
+        html_content = self.template.render_template()
+
         # Render the HTML
         self.render_html(html_content)
 
+    def rerender(self):
+        render_html = self.template.render_template()
+        self.render_html(render_html)
+
     def render_html(self, html_content):
         try:
+            # Clear the existing layout before re-rendering
+            while self.layout.count():
+                item = self.layout.takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+
             soup = BeautifulSoup(html_content, "html.parser")
             self._process_styles(soup)
 
@@ -46,6 +61,7 @@ class HTMLRenderer(QWidget):
                         widget = self.create_element(element)
                         if widget:
                             self.layout.addWidget(widget)
+                            self.element_widget_map[element] = widget
         except Exception as e:
             error_label = QLabel(f"Error rendering HTML: {str(e)}")
             error_label.setStyleSheet("color: red;")
@@ -66,6 +82,7 @@ class HTMLRenderer(QWidget):
                     self.styles[selector] = prop_dict
 
     def create_element(self, element):
+
         # Get the appropriate element class
         element_class = self.element_classes.get(element.name)
         if not element_class:
@@ -74,6 +91,19 @@ class HTMLRenderer(QWidget):
         # Create the element
         html_element = element_class(element)
         widget = html_element.create_widget()
+
+        """
+        
+        We have a widget but we need to know what listeners to add to the method
+        
+        If it is a button we need to call the button attached to the on_click func
+        If it is an input element we need to call the listener function for the state of that input
+        
+        
+            
+        """
+        methods = self.template.component.methods
+        html_element.attach_callback(methods)
 
         # Apply styles
         self._apply_element_styles(html_element, element)
@@ -85,6 +115,7 @@ class HTMLRenderer(QWidget):
                     child_widget = self.create_element(child)
                     if child_widget:
                         html_element.add_child(child_widget)
+                        self.element_widget_map[child] = child_widget
 
         return widget
 

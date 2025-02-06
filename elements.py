@@ -1,4 +1,5 @@
 # elements.py
+from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QLineEdit
@@ -9,11 +10,17 @@ from PyQt6.QtGui import QFont
 class HTMLElement:
     def __init__(self, element):
         self.element = element
+        self.listeners = []
         self.widget = None
 
+    def add_listener(self, listener):
+        self.listeners.append(listener)
+
+    def attach_callback(self, methods):
+        pass
+
     def create_widget(self):
-        """Create and return the PyQt widget"""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def apply_styles(self, style_dict):
         """Apply styles to the widget"""
@@ -47,9 +54,27 @@ class HTMLElement:
 
 class ButtonElement(HTMLElement):
     def create_widget(self):
-        text = self.element.text.strip() if self.element.text else "Button"
-        self.widget = QPushButton(text)
+        self.widget = QPushButton(self.element.get_text(strip=True) or "Button")
+
+        try:
+            # get the func name of the callback
+            self.callback_name = self.element.get("on_click")
+        except AttributeError:
+            raise ValueError("Button element must have a 'on_click' attribute")
+
+        self.widget.clicked.connect(lambda x: self._on_click(x))
+
         return self.widget
+
+    def attach_callback(self, methods):
+        if self.callback_name and self.callback_name in methods:
+            self.add_listener(methods[self.callback_name])
+        else:
+            print(f"Callback {self.callback_name} not found in methods")  # Debug
+
+    def _on_click(self, *args, **kwargs):
+        for listener in self.listeners:
+            listener()
 
 
 class LabelElement(HTMLElement):
@@ -65,7 +90,26 @@ class InputElement(HTMLElement):
         self.widget = QLineEdit()
         if self.element.get('value'):
             self.widget.setText(self.element.get('value'))
+
+        try:
+            # get the func name of the callback
+            self.callback_name = self.element.get("on_change")
+        except AttributeError:
+            raise ValueError("Button element must have a 'on_click' attribute")
+
+        self.widget.textChanged.connect(lambda x: self._on_value_changed(x))
+
         return self.widget
+
+    def _on_value_changed(self, value):
+        for listener in self.listeners:
+            listener(value)
+
+    def attach_callback(self, methods):
+        if self.callback_name and self.callback_name in methods:
+            self.add_listener(methods[self.callback_name])
+        else:
+            print(f"Callback {self.callback_name} not found in methods")  # Debug
 
 
 class DivElement(HTMLElement):
@@ -79,6 +123,7 @@ class DivElement(HTMLElement):
             layout = QVBoxLayout()
 
         self.widget.setLayout(layout)
+
         return self.widget
 
     def add_child(self, child_widget):

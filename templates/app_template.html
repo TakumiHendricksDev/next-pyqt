@@ -1,0 +1,28 @@
+<html>
+<body>
+    <div class="todo-list">
+        <label>Todo List ({{ computed['todo_count'] }} items)</label>
+
+        <div>
+            <input id="new-todo"
+                   value="{{ state['new_todo'] }}"
+                   on_change="handle_input_change"
+                   placeholder="Add new todo"/>
+            <button on_click="add_todo">Add</button>
+        </div>
+
+        <div class="todo-items">
+            {if len(state['todos']) == 0}
+                <label>No todos yet! Add some above.</label>
+            {else}
+                {for todo in state['todos']}
+                    <div class="todo-item">
+                        <label>{{ todo }}</label>
+                        <button class="remove-btn">Remove</button>
+                    </div>
+                {/for}
+            {/if}
+        </div>
+    </div>
+</body>
+</html>

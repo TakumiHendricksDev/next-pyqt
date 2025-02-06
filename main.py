@@ -2,32 +2,33 @@
 from PyQt6.QtWidgets import QApplication
 import sys
 from HTMLRenderer import HTMLRenderer
+from app import App
 from components import ComponentLoader
-
-def read_html_file(file_path):
-    try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            return file.read()
-    except FileNotFoundError:
-        return f"""
-        <html><body>
-            <label style="color: red;">Error: Could not find HTML file at {file_path}</label>
-        </body></html>
-        """
+from template_engine import HTMLTemplate
 
 
 if __name__ == "__main__":
     # Initialize component loader
-    component_loader = ComponentLoader()
-
-    # Read main HTML file
-    main_html = read_html_file('app.html')
+    # component_loader = ComponentLoader()
+    #
+    # # Read main HTML file
+    # main_html = read_html_file('app.html')
 
     # Process components
-    processed_html = component_loader.replace_components(main_html)
+    # processed_html = component_loader.replace_components(main_html)
+
+    # Process HTML
+    app = App()
+    template = HTMLTemplate(app)
 
     # Create and show the application
-    app = QApplication(sys.argv)
-    window = HTMLRenderer(processed_html)
+    q_app = QApplication(sys.argv)
+
+    window = HTMLRenderer(template)
+
+    # Link App to HTMLRenderer
+    app.set_renderer(window)
+
     window.show()
-    sys.exit(app.exec())
+
+    sys.exit(q_app.exec())
