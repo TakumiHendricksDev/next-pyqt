@@ -2,7 +2,7 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLabel, QLineEdit
+    QLabel, QLineEdit, QGroupBox
 )
 from PyQt6.QtGui import QFont
 import re
@@ -40,24 +40,26 @@ class NextPyElement:
 
         stylesheet_parts = []
         for key, value in style_dict.items():
-            if key == 'background-color':
-                stylesheet_parts.append(f"background-color: {value};")
-            elif key == 'color':
-                stylesheet_parts.append(f"color: {value};")
-            elif key == 'font-size':
-                if value.endswith('px'):
-                    value = f"{int(value[:-2])}pt"
-                stylesheet_parts.append(f"font-size: {value};")
-            elif key == 'padding':
-                stylesheet_parts.append(f"padding: {value};")
-            elif key == 'margin':
-                stylesheet_parts.append(f"margin: {value};")
-            elif key == 'border':
-                stylesheet_parts.append(f"border: {value};")
-            elif key == 'border-radius':
-                stylesheet_parts.append(f"border-radius: {value};")
-            elif key == 'font-weight' and value == 'bold':
-                stylesheet_parts.append("font-weight: bold;")
+            stylesheet_parts.append(f"{key}: {value};")
+
+            # if key == 'background-color':
+            #     stylesheet_parts.append(f"background-color: {value};")
+            # elif key == 'color':
+            #     stylesheet_parts.append(f"color: {value};")
+            # elif key == 'font-size':
+            #     if value.endswith('px'):
+            #         value = f"{int(value[:-2])}pt"
+            #     stylesheet_parts.append(f"font-size: {value};")
+            # elif key == 'padding':
+            #     stylesheet_parts.append(f"padding: {value};")
+            # elif key == 'margin':
+            #     stylesheet_parts.append(f"margin: {value};")
+            # elif key == 'border':
+            #     stylesheet_parts.append(f"border: {value};")
+            # elif key == 'border-radius':
+            #     stylesheet_parts.append(f"border-radius: {value};")
+            # elif key == 'font-weight' and value == 'bold':
+            #     stylesheet_parts.append("font-weight: bold;")
 
         if stylesheet_parts:
             self.widget.setStyleSheet(' '.join(stylesheet_parts))
@@ -143,7 +145,6 @@ class NextPyDivElement(NextPyElement):
 
 class NextPyComponentElement(NextPyElement):
     def create_widget(self):
-        self.widget = QWidget()
-        layout = QVBoxLayout()
-        self.widget.setLayout(layout)
+        self.widget = QGroupBox()
+
         return self.widget
