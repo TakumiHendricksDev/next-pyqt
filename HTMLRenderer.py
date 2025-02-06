@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import re
 from elements import (
     ButtonElement, LabelElement,
-    InputElement, DivElement
+    InputElement, DivElement, ComponentElement
 )
 
 
@@ -24,7 +24,8 @@ class HTMLRenderer(QWidget):
             'button': ButtonElement,
             'label': LabelElement,
             'input': InputElement,
-            'div': DivElement
+            'div': DivElement,
+            'component': ComponentElement,
         }
 
         # Create main layout
@@ -96,8 +97,6 @@ class HTMLRenderer(QWidget):
         
         If it is a button we need to call the button attached to the on_click func
         If it is an input element we need to call the listener function for the state of that input
-        
-        
             
         """
         methods = self.component.methods

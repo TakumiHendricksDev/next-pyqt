@@ -140,3 +140,10 @@ class DivElement(HTMLElement):
     def add_child(self, child_widget):
         if self.widget:
             self.widget.layout().addWidget(child_widget)
+
+class ComponentElement(HTMLElement):
+    def create_widget(self):
+        self.widget = QWidget()
+        layout = QVBoxLayout()
+        self.widget.setLayout(layout)
+        return self.widget

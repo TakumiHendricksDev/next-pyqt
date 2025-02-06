@@ -1,3 +1,4 @@
+from header_app import HeaderApp
 from template_engine import PyComponent
 
 class App(PyComponent):
@@ -8,6 +9,9 @@ class App(PyComponent):
             'todos': [
             ],
             'new_todo': ''
+        }
+        self.components = {
+            "header": HeaderApp
         }
         self.add_computed('todo_count', lambda: len(self.state['todos']))
         self.add_method('add_todo', self.add_todo)
