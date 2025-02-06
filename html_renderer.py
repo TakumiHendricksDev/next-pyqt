@@ -3,8 +3,8 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from bs4 import BeautifulSoup
 import re
 from elements import (
-    ButtonElement, LabelElement,
-    InputElement, DivElement, ComponentElement
+    NextPyButtonElement, NextPyLabelElement,
+    NextPyInputElement, NextPyDivElement, NextPyComponentElement
 )
 
 
@@ -21,11 +21,11 @@ class NextPyHTMLRenderer(QWidget):
 
         # Element mapping
         self.element_classes = {
-            'button': ButtonElement,
-            'label': LabelElement,
-            'input': InputElement,
-            'div': DivElement,
-            'component': ComponentElement,
+            'button': NextPyButtonElement,
+            'label': NextPyLabelElement,
+            'input': NextPyInputElement,
+            'div': NextPyDivElement,
+            'component': NextPyComponentElement,
         }
 
         # Create main layout
@@ -106,7 +106,7 @@ class NextPyHTMLRenderer(QWidget):
         self._apply_element_styles(html_element, element)
 
         # Handle children for container elements
-        if isinstance(html_element, DivElement):
+        if isinstance(html_element, NextPyDivElement):
             for child in element.children:
                 if child.name:
                     child_widget = self.create_element(child)

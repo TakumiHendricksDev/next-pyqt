@@ -3,11 +3,11 @@ from PyQt6.QtWidgets import QApplication
 import sys
 from html_renderer import NextPyHTMLRenderer
 from app import App
-from template_engine import JinjaTemplate
+from template_engine import NextPyTemplate
 
 if __name__ == "__main__":
     # Process HTML
-    template = JinjaTemplate()
+    template = NextPyTemplate()
     app = App(template_engine=template)
 
     # Create and show the application

@@ -115,7 +115,7 @@ class NextPyComponent:
             self.renderer.rerender()
 
 
-class JinjaTemplate:
+class NextPyTemplate:
     def __init__(self, template_dir="."):
         self.env = Environment(loader=FileSystemLoader(template_dir))  # Load templates from the current directory
 

@@ -8,7 +8,7 @@ from PyQt6.QtGui import QFont
 import re
 
 
-class HTMLElement:
+class NextPyElement:
     def __init__(self, element):
         self.element = element
         self.listeners = []
@@ -63,7 +63,7 @@ class HTMLElement:
             self.widget.setStyleSheet(' '.join(stylesheet_parts))
 
 
-class ButtonElement(HTMLElement):
+class NextPyButtonElement(NextPyElement):
     def create_widget(self):
         self.widget = QPushButton(self.element.get_text(strip=True) or "Button")
 
@@ -88,7 +88,7 @@ class ButtonElement(HTMLElement):
             listener(*params)
 
 
-class LabelElement(HTMLElement):
+class NextPyLabelElement(NextPyElement):
     def create_widget(self):
         text = self.element.text.strip() if self.element.text else ""
         self.widget = QLabel(text)
@@ -96,7 +96,7 @@ class LabelElement(HTMLElement):
         return self.widget
 
 
-class InputElement(HTMLElement):
+class NextPyInputElement(NextPyElement):
     def create_widget(self):
         self.widget = QLineEdit()
         if self.element.get('value'):
@@ -123,7 +123,7 @@ class InputElement(HTMLElement):
             print(f"Callback {self.callback_name} not found in methods")  # Debug
 
 
-class DivElement(HTMLElement):
+class NextPyDivElement(NextPyElement):
     def create_widget(self):
         self.widget = QWidget()
 
@@ -141,7 +141,7 @@ class DivElement(HTMLElement):
         if self.widget:
             self.widget.layout().addWidget(child_widget)
 
-class ComponentElement(HTMLElement):
+class NextPyComponentElement(NextPyElement):
     def create_widget(self):
         self.widget = QWidget()
         layout = QVBoxLayout()
