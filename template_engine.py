@@ -1,25 +1,17 @@
-import re
-from string import Template
-import ast
-
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
+from pydantic import BaseModel, ValidationError
 
-class PyComponent:
-    """
-    Class representing a PyComponent
-    """
 
-    """
-        {
-            "prop_name": {
-                "type": str,
-                "required": true,
-            }
-        }
-    """
-    props_config = {}
+class NextPyProps(BaseModel):
+    """Base class for defining component props."""
+    pass
 
+class NextPyComponent:
+    """
+    Class representing a NextPyComponent
+    """
+    props_schema = None
 
     def __init__(self, template_path=None, template_engine=None, **kwargs):
         self.template_path = template_path
@@ -44,29 +36,29 @@ class PyComponent:
         self.renderer = None
 
     def build_props(self, **kwargs):
-        for key, value in self.props_config.items():
-            if key in kwargs:
-                if not isinstance(kwargs[key], self.props_config[key].get("type")):
-                    raise TypeError()
-
-                self.props[key] = kwargs[key]
-                continue
-
-            if self.props_config[key].get('required', False):
-                raise TypeError("Required property '{}' not provided".format(key))
+        """Validates props using Pydantic model."""
+        if self.props_schema:
+            try:
+                validated_props = self.props_schema(**kwargs)
+                self.props = validated_props.dict()
+            except ValidationError as e:
+                raise TypeError(f"Invalid props: {e}")
 
     def setState(self, new_state):
+        """Set state for components and rerender."""
         self.state.update(new_state)
         self.rerender()
-        # Here you would trigger a re-render
 
     def add_computed(self, name, func):
+        """Add a computed property."""
         self.computed[name] = func
 
     def add_method(self, name, func):
+        """Add a method property."""
         self.methods[name] = func
 
     def set_renderer(self, window):
+        """Set the renderer."""
         self.renderer = window
 
     def render(self):
@@ -97,10 +89,7 @@ class PyComponent:
                 component_class = self.components[component_name]
 
                 # get props if it exists
-                prop_data = {}
-                for attr in component_tag.attrs:
-                    if attr in component_class.props_config:
-                        prop_data[attr] = component_tag.get(attr)
+                prop_data = {attr: component_tag.get(attr) for attr in component_class.props_schema.__annotations__.keys()}
 
                 component_instance = component_class(template_engine=self.template_engine, **prop_data)
 
@@ -130,7 +119,7 @@ class JinjaTemplate:
     def __init__(self, template_dir="."):
         self.env = Environment(loader=FileSystemLoader(template_dir))  # Load templates from the current directory
 
-    def render_template(self, template_path, component: PyComponent):
+    def render_template(self, template_path, component: NextPyComponent):
         try:
             template = self.env.get_template(template_path)
             return template.render(

@@ -1,4 +1,4 @@
-# HTMLRenderer.py
+# NextPyHTMLRenderer.py
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from bs4 import BeautifulSoup
 import re
@@ -8,7 +8,7 @@ from elements import (
 )
 
 
-class HTMLRenderer(QWidget):
+class NextPyHTMLRenderer(QWidget):
     def __init__(self, component):
         super().__init__()
 

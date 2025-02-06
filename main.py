@@ -1,9 +1,8 @@
 # main.py
 from PyQt6.QtWidgets import QApplication
 import sys
-from HTMLRenderer import HTMLRenderer
+from html_renderer import NextPyHTMLRenderer
 from app import App
-from components import ComponentLoader
 from template_engine import JinjaTemplate
 
 if __name__ == "__main__":
@@ -14,9 +13,9 @@ if __name__ == "__main__":
     # Create and show the application
     q_app = QApplication(sys.argv)
 
-    window = HTMLRenderer(app)
+    window = NextPyHTMLRenderer(app)
 
-    # Link App to HTMLRenderer
+    # Link App to NextPyHTMLRenderer
     app.set_renderer(window)
 
     window.show()

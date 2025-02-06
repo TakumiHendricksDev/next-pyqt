@@ -1,7 +1,7 @@
-from header_app import HeaderApp
-from template_engine import PyComponent
+from components.header_app import HeaderApp
+from template_engine import NextPyComponent
 
-class App(PyComponent):
+class App(NextPyComponent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.template_path = 'templates/index.html'
