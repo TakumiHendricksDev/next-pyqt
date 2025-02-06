@@ -11,7 +11,8 @@ class App(PyComponent):
         }
         self.add_computed('todo_count', lambda: len(self.state['todos']))
         self.add_method('add_todo', self.add_todo)
-        self.add_method('handle_input_change', self.handle_input_change)
+        self.add_method('update_new_todo', self.update_new_todo)
+        self.add_method('remove_todo', self.remove_todo)
 
     def add_todo(self):
         if self.state['new_todo']:
@@ -20,13 +21,10 @@ class App(PyComponent):
                 'new_todo': ''
             })
 
-    def handle_input_change(self, value):
-        self.state['new_todo'] = value
-
     def update_new_todo(self, value):
-        self.setState({'new_todo': value})
+        self.state['new_todo'] = value
 
     def remove_todo(self, index):
         todos = self.state['todos'].copy()
-        todos.pop(index)
+        todos.pop(int(index))
         self.setState({'todos': todos})

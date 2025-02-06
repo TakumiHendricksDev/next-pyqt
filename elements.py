@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QLabel, QLineEdit
 )
 from PyQt6.QtGui import QFont
+import re
 
 
 class HTMLElement:
@@ -21,6 +22,16 @@ class HTMLElement:
 
     def create_widget(self):
         raise NotImplementedError()
+
+    @staticmethod
+    def parse_method_call(method_call: str):
+        match = re.match(r'(\w+)\((.*?)\)', method_call)
+        if match:
+            method_name = match.group(1)
+            params = match.group(2).split(',') if match.group(2) else []
+            params = [param.strip() for param in params]  # Remove extra spaces
+            return method_name, params
+        return None, None
 
     def apply_styles(self, style_dict):
         """Apply styles to the widget"""
@@ -58,11 +69,11 @@ class ButtonElement(HTMLElement):
 
         try:
             # get the func name of the callback
-            self.callback_name = self.element.get("on_click")
+            self.callback_name, self.callback_params = self.parse_method_call(self.element.get("on_click"))
         except AttributeError:
             raise ValueError("Button element must have a 'on_click' attribute")
 
-        self.widget.clicked.connect(lambda x: self._on_click(x))
+        self.widget.clicked.connect(lambda: self._on_click(self.callback_params))
 
         return self.widget
 
@@ -72,9 +83,9 @@ class ButtonElement(HTMLElement):
         else:
             print(f"Callback {self.callback_name} not found in methods")  # Debug
 
-    def _on_click(self, *args, **kwargs):
+    def _on_click(self, params):
         for listener in self.listeners:
-            listener()
+            listener(*params)
 
 
 class LabelElement(HTMLElement):

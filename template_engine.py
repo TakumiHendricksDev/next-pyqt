@@ -72,7 +72,9 @@ class HTMLTemplate:
             loop_expr = match.group(1)
             loop_content = match.group(2)
 
-            # Parse the loop expression
+            # Parse the loop expression, split into 'todo' and 'state['todos']
+            # what if we wanted enumerate?
+            # todo: allow for ` for index, item in enumerate(state['todos'])
             loop_parts = loop_expr.split(' in ')
             if len(loop_parts) != 2:
                 return "Error: Invalid for loop syntax"
@@ -94,7 +96,13 @@ class HTMLTemplate:
                 for item in collection:
                     # Add the loop variable to the context
                     loop_context = context.copy()
-                    loop_context[item_name] = item
+
+                    if isinstance(item, tuple) and len(item) >= 1:
+                        item_names = item_name.split(',')
+                        for index, val in enumerate(item):
+                            loop_context[item_names[index].strip()] = val
+                    else:
+                        loop_context[item_name] = item
 
                     # Process the loop content
                     content = loop_content

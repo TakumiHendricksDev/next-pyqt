@@ -6,19 +6,19 @@
         <div>
             <input id="new-todo"
                    value="{{ state['new_todo'] }}"
-                   on_change="handle_input_change"
+                   on_change="update_new_todo"
                    placeholder="Add new todo"/>
-            <button on_click="add_todo">Add</button>
+            <button on_click="add_todo()">Add</button>
         </div>
 
         <div class="todo-items">
             {if len(state['todos']) == 0}
                 <label>No todos yet! Add some above.</label>
             {else}
-                {for todo in state['todos']}
+                {for index, todo in enumerate(state['todos'])}
                     <div class="todo-item">
                         <label>{{ todo }}</label>
-                        <button class="remove-btn">Remove</button>
+                        <button on_click="remove_todo({{ index }})">Remove</button>
                     </div>
                 {/for}
             {/if}
