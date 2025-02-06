@@ -1,9 +1,9 @@
 from template_engine import PyComponent
 
 class App(PyComponent):
-    def __init__(self):
-        super().__init__()
-        self.template_path = 'templates/app_template.html'
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.template_path = 'templates/index.html'
         self.state = {
             'todos': [
             ],

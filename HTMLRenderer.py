@@ -9,7 +9,7 @@ from elements import (
 
 
 class HTMLRenderer(QWidget):
-    def __init__(self, template):
+    def __init__(self, component):
         super().__init__()
 
         # Set up the window
@@ -33,15 +33,13 @@ class HTMLRenderer(QWidget):
 
         self.element_widget_map = {}
 
-        self.template = template
-        html_content = self.template.render_template()
+        self.component = component
 
         # Render the HTML
-        self.render_html(html_content)
+        self.render_html(component.render())
 
     def rerender(self):
-        render_html = self.template.render_template()
-        self.render_html(render_html)
+        self.render_html(self.component.render())
 
     def render_html(self, html_content):
         try:
@@ -102,7 +100,7 @@ class HTMLRenderer(QWidget):
         
             
         """
-        methods = self.template.component.methods
+        methods = self.component.methods
         html_element.attach_callback(methods)
 
         # Apply styles
