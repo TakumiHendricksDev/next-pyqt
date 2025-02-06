@@ -42,7 +42,8 @@ class HTMLTemplate:
                 # Create context with component's state and computed properties
                 context = {
                     'state': self.component.state,
-                    'computed': self.component.computed
+                    'computed': self.component.computed,
+                    'methods': self.component.methods,
                 }
 
                 # Add any component methods
@@ -83,7 +84,8 @@ class HTMLTemplate:
                 # Evaluate the collection expression
                 context = {
                     'state': self.component.state,
-                    'computed': self.component.computed
+                    'computed': self.component.computed,
+                    'methods': self.component.methods,
                 }
                 collection = eval(collection_expr, {}, context)
 
