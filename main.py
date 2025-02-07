@@ -1,23 +1,27 @@
-# main.py
-from PyQt6.QtWidgets import QApplication
-import sys
-from html_renderer import NextPyHTMLRenderer
-from app import App
+from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
+from pydantic import BaseModel
+
+from app import TodoApp
 from template_engine import NextPyTemplate
+from window import NextPyWindow
 
+# Usage example:
 if __name__ == "__main__":
-    # Process HTML
-    template = NextPyTemplate()
-    app = App(template_engine=template)
+    from PyQt6.QtWidgets import QApplication
+    import sys
 
-    # Create and show the application
-    q_app = QApplication(sys.argv)
+    # Create the application
+    app = QApplication(sys.argv)
 
-    window = NextPyHTMLRenderer(app)
+    # Create root component
+    root = TodoApp(
+        template_engine=NextPyTemplate("templates"),
+        template_path="todo_app.html"
+    )
 
-    # Link App to NextPyHTMLRenderer
-    app.set_renderer(window)
-
+    # Create and show window
+    window = NextPyWindow(root, "Todo App")
     window.show()
 
-    sys.exit(q_app.exec())
+    # Start the event loop
+    sys.exit(app.exec())

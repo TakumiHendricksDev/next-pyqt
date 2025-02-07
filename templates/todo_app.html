@@ -1,6 +1,4 @@
 <QWidget>
-    <component name="header" ref="header" title="Test Header"></component>
-
     <QLabel>Todo List ({{ computed.todo_count }} items)</QLabel>
 
     <QWidget>
@@ -16,11 +14,14 @@
             <QLabel>No todos yet! Add some above.</QLabel>
         {% else %}
             {% for todo in state.todos %}
-                <QWidget class="horizontal todo-item">
-                    <QCheckbox></QCheckbox>
-                    <QLabel>{{ todo }}</QLabel>
-                    <QPushButton on_click="remove_todo({{ loop.index - 1 }})">Remove</QPushButton>
-                </QWidget>
+                <component
+                    name="todo-item"
+                    ref="todo-item"
+                    text="{{ todo.text }}"
+                    completed="{{ todo.completed }}"
+                    id="{{ loop.index - 1 }}"
+                    on_remove="remove"
+                ></component>
             {% endfor %}
         {% endif %}
     </QWidget>

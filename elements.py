@@ -146,6 +146,9 @@ class NextPyDivElement(NextPyElement):
 class NextPyComponentElement(NextPyElement):
     def create_widget(self):
         self.widget = QGroupBox()
+
+        # components need to be able to handle any elements supported
+
         return self.widget
 
 class NextPyCheckboxElement(NextPyElement):
