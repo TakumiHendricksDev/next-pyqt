@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import re
 from elements import (
     NextPyButtonElement, NextPyLabelElement,
-    NextPyInputElement, NextPyDivElement, NextPyComponentElement
+    NextPyInputElement, NextPyDivElement, NextPyComponentElement, NextPyCheckboxElement
 )
 
 
@@ -21,18 +21,18 @@ class NextPyHTMLRenderer(QWidget):
 
         # Element mapping
         self.element_classes = {
-            'button': NextPyButtonElement,
-            'label': NextPyLabelElement,
-            'input': NextPyInputElement,
-            'div': NextPyDivElement,
+            'qpushbutton': NextPyButtonElement,
+            'qlabel': NextPyLabelElement,
+            'qlineedit': NextPyInputElement,
+            'qwidget': NextPyDivElement,
+            'qcheckbox': NextPyCheckboxElement,
+
             'component': NextPyComponentElement,
         }
 
         # Create main layout
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-
-        self.element_widget_map = {}
 
         self.component = component
 
@@ -53,14 +53,12 @@ class NextPyHTMLRenderer(QWidget):
             soup = BeautifulSoup(html_content, "html.parser")
             self._process_styles(soup)
 
-            body = soup.find('body')
-            if body:
-                for element in body.children:
-                    if element.name:
-                        widget = self.create_element(element)
-                        if widget:
-                            self.layout.addWidget(widget)
-                            self.element_widget_map[element] = widget
+            for element in soup.find_all(recursive=False):
+                if element.name:
+                    widget = self.create_element(element)
+                    if widget:
+                        self.layout.addWidget(widget)
+
         except Exception as e:
             error_label = QLabel(f"Error rendering HTML: {str(e)}")
             error_label.setStyleSheet("color: red;")
@@ -112,7 +110,6 @@ class NextPyHTMLRenderer(QWidget):
                     child_widget = self.create_element(child)
                     if child_widget:
                         html_element.add_child(child_widget)
-                        self.element_widget_map[child] = child_widget
 
         return widget
 

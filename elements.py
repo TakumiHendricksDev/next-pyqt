@@ -2,7 +2,7 @@
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLabel, QLineEdit, QGroupBox
+    QLabel, QLineEdit, QGroupBox, QCheckBox
 )
 from PyQt6.QtGui import QFont
 import re
@@ -146,5 +146,9 @@ class NextPyDivElement(NextPyElement):
 class NextPyComponentElement(NextPyElement):
     def create_widget(self):
         self.widget = QGroupBox()
+        return self.widget
 
+class NextPyCheckboxElement(NextPyElement):
+    def create_widget(self):
+        self.widget = QCheckBox()
         return self.widget
