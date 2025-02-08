@@ -293,6 +293,181 @@ class NextPyComponent:
 
         return widget
 
+    def _update_element_attributes(self, element_instance, new_attributes: dict):
+        """
+        Update the attributes of a widget element
+
+        Args:
+            element_instance: The widget element instance to update
+            new_attributes: Dictionary of new attributes to apply
+        """
+        # Get current attributes
+        current_attributes = getattr(element_instance, 'attributes', {})
+
+        # Skip if attributes are identical
+        if current_attributes == new_attributes:
+            return
+
+        # Update style attributes
+        if 'style' in new_attributes:
+            stylesheet = self._build_stylesheet(new_attributes['style'])
+            element_instance.widget.setStyleSheet(stylesheet)
+
+        # Update enabled state
+        if 'disabled' in new_attributes:
+            element_instance.widget.setEnabled(not new_attributes['disabled'])
+
+        # Update visibility
+        if 'hidden' in new_attributes:
+            element_instance.widget.setVisible(not new_attributes['hidden'])
+
+        # Update specific widget type attributes
+        widget_type = type(element_instance).__name__
+
+        if widget_type == 'NextPyButtonElement':
+            if 'text' in new_attributes:
+                element_instance.widget.setText(new_attributes['text'])
+
+        elif widget_type == 'NextPyInputElement':
+            if 'placeholder' in new_attributes:
+                element_instance.widget.setPlaceholderText(new_attributes['placeholder'])
+            if 'value' in new_attributes:
+                element_instance.widget.setText(new_attributes['value'])
+
+        elif widget_type == 'NextPyCheckboxElement':
+            if 'checked' in new_attributes:
+                element_instance.widget.setChecked(new_attributes['checked'])
+
+        # Store new attributes
+        element_instance.attributes = new_attributes
+
+    def _update_element_content(self, element_instance, new_content: str):
+        """
+        Update the content/text of a widget element
+
+        Args:
+            element_instance: The widget element instance to update
+            new_content: New content string to set
+        """
+        # Skip if content hasn't changed
+        current_content = getattr(element_instance, 'content', '')
+        if current_content == new_content:
+            return
+
+        # Update based on widget type
+        widget_type = type(element_instance).__name__
+
+        if widget_type in ['NextPyButtonElement', 'NextPyLabelElement']:
+            element_instance.widget.setText(new_content)
+        elif widget_type == 'NextPyInputElement':
+            # Only update if the input doesn't have focus to avoid disrupting user typing
+            if not element_instance.widget.hasFocus():
+                element_instance.widget.setText(new_content)
+
+        # Store new content
+        element_instance.content = new_content
+
+    def _update_children(self, parent_widget, current_children: list, new_children: list):
+        """
+        Update child widgets within a container widget
+
+        Args:
+            parent_widget: The parent QWidget containing children
+            current_children: List of current child ElementStates
+            new_children: List of new child ElementStates
+        """
+        layout = parent_widget.layout()
+        if not layout:
+            return
+
+        # Create maps for current and new children using their IDs or content as keys
+        current_map = {
+            self._get_element_key(child): child
+            for child in current_children if child
+        }
+        new_map = {
+            self._get_element_key(child): child
+            for child in new_children if child
+        }
+
+        # Track processed widgets to handle removals
+        processed_widgets = set()
+
+        # Process new children
+        for i, new_child in enumerate(new_children):
+            if not new_child:
+                continue
+
+            key = self._get_element_key(new_child)
+            current_child = current_map.get(key)
+
+            if current_child:
+                # Update existing child
+                widget = layout.itemAt(i).widget() if i < layout.count() else None
+                if widget:
+                    updated_widget = self._update_element_tree(widget, current_child, new_child)
+                    processed_widgets.add(widget)
+                    if updated_widget != widget:
+                        layout.replaceWidget(widget, updated_widget)
+            else:
+                # Insert new child
+                new_widget = self.create_element(new_child.element)
+                if new_widget:
+                    layout.insertWidget(i, new_widget)
+
+        # Remove unprocessed widgets (ones that don't exist in new children)
+        i = 0
+        while i < layout.count():
+            widget = layout.itemAt(i).widget()
+            if widget and widget not in processed_widgets:
+                layout.removeWidget(widget)
+                widget.deleteLater()
+            else:
+                i += 1
+
+    def _get_element_key(self, element_state) -> str:
+        """
+        Get a unique key for an element state to use in diffing
+
+        Args:
+            element_state: ElementState instance
+
+        Returns:
+            str: Unique key for the element
+        """
+        if not element_state:
+            return None
+
+        # Try to get ID from attributes
+        element_id = element_state.attributes.get('id')
+        if element_id:
+            return f"id:{element_id}"
+
+        # Fall back to element type + content as key
+        return f"{element_state.element_type}:{element_state.content}"
+
+    def _build_stylesheet(self, style_dict: dict) -> str:
+        """
+        Convert a style dictionary to a Qt stylesheet string
+
+        Args:
+            style_dict: Dictionary of style properties
+
+        Returns:
+            str: Formatted Qt stylesheet
+        """
+        if not style_dict:
+            return ""
+
+        # Convert style dictionary to Qt stylesheet syntax
+        styles = []
+        for key, value in style_dict.items():
+            # Convert camelCase to kebab-case
+            qt_key = ''.join([f'-{c.lower()}' if c.isupper() else c for c in key]).lstrip('-')
+            styles.append(f"{qt_key}: {value};")
+
+        return ' '.join(styles)
+
     def rerender_component(self, changed_keys: Optional[set] = None):
         """Rerender component, optionally based on changed state keys"""
         if not self.main_widget:
