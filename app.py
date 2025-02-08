@@ -14,6 +14,7 @@ class TodoApp(NextPyComponent):
         }
         self.methods['add_todo'] = self.add_todo
         self.methods['update_new_todo'] = self.update_new_todo
+        self.methods['remove_todo'] = self.remove_todo
         self.computed['todo_count'] = lambda: len(self.state['todos'])
 
 
@@ -33,6 +34,13 @@ class TodoApp(NextPyComponent):
             **self.state,
             'new_todo': value
         }, rerender=False)
+
+    def remove_todo(self, index):
+        index_int = int(index)
+        self.setState({
+            **self.state,
+            "todos": self.state["todos"][:index_int] + self.state["todos"][index_int + 1:]
+        })
 
     def update_todo_status(self, todo_text: str, completed: bool):
         todos = self.state['todos'].copy()

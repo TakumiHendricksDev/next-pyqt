@@ -20,7 +20,7 @@
                     text="{{ todo.text }}"
                     completed="{{ todo.completed }}"
                     id="{{ loop.index - 1 }}"
-                    on_remove="remove"
+                    on_remove="remove_todo"
                 ></component>
             {% endfor %}
         {% endif %}

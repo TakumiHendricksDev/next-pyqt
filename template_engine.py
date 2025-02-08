@@ -23,7 +23,7 @@ class ElementState:
 
 
 class NextPyComponent:
-    def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, **kwargs):
+    def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, events=None, **kwargs):
         self.template_path = template_path
         self.template_engine = template_engine
         self._state = {}
@@ -34,6 +34,7 @@ class NextPyComponent:
         self.emits = []
         self.props = props or {}
         self.element_instances = {}  # Store element instances by ID
+        self.mapped_events = events
 
         # Element mapping
         self.element_classes = {
@@ -69,13 +70,22 @@ class NextPyComponent:
         Set the state of this component
         :param new_state: the new state to set
         :param rerender: if rerender is False, will not rerender state
-        :return:
+        :return: void
         """
         old_state = self._state.copy()
         self._state.update(new_state)
 
         if rerender is True:
             self._handle_state_change(old_state, self._state)
+
+    def emit_event(self, event, *args, **kwargs):
+        """
+        Emit an event to this component
+        :param event: event key
+        :return: void
+        """
+        if event in self.mapped_events:
+            self.mapped_events[event](*args, **kwargs)
 
     def _handle_state_change(self, old_state: Dict[str, Any], new_state: Dict[str, Any]):
         """Handle state changes and trigger selective updates"""
@@ -140,11 +150,19 @@ class NextPyComponent:
             for attr in getattr(component_class, 'props_schema', {}).__annotations__.keys()
         }
 
+        events = {}
+        for event_name in component_class.emits:
+            event_call = f"on_{event_name}"
+            get_call = element_data.get(event_call)
+            if get_call is not None:
+                events[event_name] = self.methods.get(get_call, None)
+
         # Create component instance
         component_instance = component_class(
             template_engine=self.template_engine,
             parent_component=self,
             props=props,
+            events=events,
         )
 
         # Store reference if specified
@@ -157,7 +175,10 @@ class NextPyComponent:
         self.child_components[component_id] = component_instance
 
         # Render the component
-        return component_instance.render()
+        component_widget = component_instance.render()
+
+        return component_widget
+
 
     def render(self) -> QWidget:
         """Render the component and return its widget"""

@@ -10,6 +10,7 @@ class TodoItemProps(BaseModel):
 
 class TodoItem(NextPyComponent):
     props_schema = TodoItemProps
+    emits = ['remove']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -17,9 +18,10 @@ class TodoItem(NextPyComponent):
         self.state = {
             'is_editing': False,
         }
-        self.emits = ['remove_todo']
         self.methods['toggle_complete'] = self.toggle_complete
         self.methods['start_edit'] = self.start_edit
+        self.methods['remove_todo'] = self.remove_todo
+
 
     def toggle_complete(self):
         if self.parent_component:
@@ -31,3 +33,6 @@ class TodoItem(NextPyComponent):
     def start_edit(self):
         self.setState({'is_editing': True})
         # Only this component will rerender, not the entire app
+
+    def remove_todo(self):
+        self.emit_event('remove', self.props['id'])
