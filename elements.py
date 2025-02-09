@@ -7,6 +7,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QFont
 import re
 
+from utils import is_value_true
+
 
 class NextPyElement:
     def __init__(self, element):
@@ -143,15 +145,30 @@ class NextPyDivElement(NextPyElement):
         if self.widget:
             self.widget.layout().addWidget(child_widget)
 
-class NextPyComponentElement(NextPyElement):
-    def create_widget(self):
-        self.widget = QGroupBox()
-
-        # components need to be able to handle any elements supported
-
-        return self.widget
 
 class NextPyCheckboxElement(NextPyElement):
     def create_widget(self):
         self.widget = QCheckBox()
+
+        try:
+            # get the func name of the callback
+            self.callback_name, self.callback_params = self.parse_method_call(self.element.get("on_checked"))
+        except AttributeError:
+            raise ValueError("Button element must have a 'on_checked' attribute")
+
+        if self.element.get("checked"):
+            self.widget.setChecked(is_value_true(self.element.get("checked")))
+
+        self.widget.clicked.connect(lambda: self._on_checked(self.callback_params))
+
         return self.widget
+
+    def attach_callback(self, methods):
+        if self.callback_name and self.callback_name in methods:
+            self.add_listener(methods[self.callback_name])
+        else:
+            print(f"Callback {self.callback_name} not found in methods")  # Debug
+
+    def _on_checked(self, params):
+        for listener in self.listeners:
+            listener(*params)

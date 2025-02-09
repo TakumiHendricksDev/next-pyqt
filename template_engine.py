@@ -1,15 +1,20 @@
 from bs4 import BeautifulSoup
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, get_type_hints
 from dataclasses import dataclass
 
 from jinja2 import Environment, FileSystemLoader
+from pydantic import BaseModel
 
 from elements import (
     NextPyButtonElement, NextPyLabelElement,
     NextPyInputElement, NextPyDivElement,
-    NextPyCheckboxElement, NextPyComponentElement
+    NextPyCheckboxElement
 )
+
+import json
+
+from utils import is_value_true
 
 
 @dataclass
@@ -43,7 +48,6 @@ class NextPyComponent:
             'qlineedit': NextPyInputElement,
             'qwidget': NextPyDivElement,
             'qcheckbox': NextPyCheckboxElement,
-            'component': NextPyComponentElement,
         }
 
         self.main_widget = None
@@ -103,15 +107,16 @@ class NextPyComponent:
             return None
 
         element_type = element_data.name.lower()  # Normalize element type
+
+        # Handle component elements
+        if element_type == 'component':
+            return self._create_component_element(element_data)
+
         element_class = self.element_classes.get(element_type)
 
         if not element_class:
             print(f"Warning: Unknown element type '{element_type}'")  # Debug
             return None
-
-        # Handle component elements
-        if element_type == 'component':
-            return self._create_component_element(element_data)
 
         # Create element instance
         element_instance = element_class(element_data)
@@ -145,10 +150,7 @@ class NextPyComponent:
 
         # Get component class and create instance
         component_class = self.components[component_name]
-        props = {
-            attr: element_data.get(attr)
-            for attr in getattr(component_class, 'props_schema', {}).__annotations__.keys()
-        }
+        props = self.cast_props_from_html(component_class, element_data)
 
         events = {}
         for event_name in component_class.emits:
@@ -178,6 +180,64 @@ class NextPyComponent:
         component_widget = component_instance.render()
 
         return component_widget
+
+    def cast_props_from_html(self, component_class, element_data):
+        """
+        Build and type cast props collection based on component's props schema and HTML data.
+
+        Args:
+            component_class: The component class with props_schema
+            element_data: Dictionary of raw HTML attribute values
+
+        Returns:
+            Dictionary of properly typed props according to schema
+        """
+        if not hasattr(component_class, 'props_schema'):
+            return {}
+
+        schema = component_class.props_schema
+        type_hints = get_type_hints(schema)
+
+        props = {}
+        for attr, target_type in type_hints.items():
+            if hasattr(element_data, attr):
+                raw_value = element_data.get(attr)
+                props[attr] = self._cast_value(raw_value, target_type)
+
+        return props
+
+    @staticmethod
+    def _cast_value(value: str, target_type: Any) -> Any:
+        """Cast value to target_type"""
+        if value is None:
+            return None
+
+        # Handle common Python types
+        if target_type == bool:
+            return is_value_true(value)
+        elif target_type in (int, float):
+            return target_type(value)
+        elif target_type == list:
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return value.split(',')
+        elif target_type == dict:
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return {}
+
+        # Handle Pydantic models
+        if isinstance(target_type, type) and issubclass(target_type, BaseModel):
+            try:
+                data = json.loads(value)
+                return target_type(**data)
+            except (json.JSONDecodeError, ValueError):
+                return None
+
+        # Default to string if no specific casting needed
+        return value
 
 
     def render(self) -> QWidget:

@@ -21,6 +21,7 @@
                     completed="{{ todo.completed }}"
                     id="{{ loop.index - 1 }}"
                     on_remove="remove_todo"
+                    on_checked="update_todo_status"
                 ></component>
             {% endfor %}
         {% endif %}
