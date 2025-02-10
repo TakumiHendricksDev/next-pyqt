@@ -23,7 +23,10 @@ class NextPyElement:
         pass
 
     def create_widget(self):
-        raise NotImplementedError()
+        if hasattr(self.element, 'style'):
+            self.apply_styles(self.element.get('style'))
+
+        return self.widget
 
     @staticmethod
     def parse_method_call(method_call: str):
@@ -35,10 +38,21 @@ class NextPyElement:
             return method_name, params
         return None, None
 
-    def apply_styles(self, style_dict):
+    def apply_styles(self, styles):
         """Apply styles to the widget"""
         if not self.widget:
             return
+
+        if styles is None:
+            return
+
+        style_dict = {}
+
+        styles = styles.split(';')
+        for style in styles:
+            if style:
+                key, value = style.split(':')
+                style_dict[key.strip()] = value.strip()
 
         stylesheet_parts = []
         for key, value in style_dict.items():
@@ -79,7 +93,7 @@ class NextPyButtonElement(NextPyElement):
 
         self.widget.clicked.connect(lambda: self._on_click(self.callback_params))
 
-        return self.widget
+        return super().create_widget()
 
     def attach_callback(self, methods):
         if self.callback_name and self.callback_name in methods:
@@ -97,14 +111,12 @@ class NextPyLabelElement(NextPyElement):
         text = self.element.text.strip() if self.element.text else ""
         self.widget = QLabel(text)
         self.widget.setFont(QFont("Arial", 12))
-        return self.widget
+        return super().create_widget()
 
 
 class NextPyInputElement(NextPyElement):
     def create_widget(self):
         self.widget = QLineEdit()
-        if self.element.get('value'):
-            self.widget.setText(self.element.get('value'))
 
         try:
             # get the func name of the callback
@@ -112,9 +124,15 @@ class NextPyInputElement(NextPyElement):
         except AttributeError:
             raise ValueError("Button element must have a 'on_click' attribute")
 
+        if self.element.get('value'):
+            self.widget.setText(self.element.get('value'))
+
+        if self.element.get('placeholder'):
+            self.widget.setPlaceholderText(self.element.get('placeholder'))
+
         self.widget.textChanged.connect(lambda x: self._on_value_changed(x))
 
-        return self.widget
+        return super().create_widget()
 
     def _on_value_changed(self, value):
         for listener in self.listeners:
@@ -139,7 +157,7 @@ class NextPyDivElement(NextPyElement):
 
         self.widget.setLayout(layout)
 
-        return self.widget
+        return super().create_widget()
 
     def add_child(self, child_widget):
         if self.widget:
@@ -161,7 +179,7 @@ class NextPyCheckboxElement(NextPyElement):
 
         self.widget.clicked.connect(lambda: self._on_checked(self.callback_params))
 
-        return self.widget
+        return super().create_widget()
 
     def attach_callback(self, methods):
         if self.callback_name and self.callback_name in methods:
