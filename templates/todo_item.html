@@ -1,0 +1,5 @@
+<QWidget spacing="20" class="horizontal todo-item" alignment="left">
+    <QCheckbox on_checked="toggle_complete()" checked="{{ props.completed }}"></QCheckbox>
+    <QLabel>{{ props.text }}</QLabel>
+    <QPushButton on_click="remove_todo()">Remove</QPushButton>
+</QWidget>

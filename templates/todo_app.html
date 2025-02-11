@@ -1,9 +1,7 @@
-<QWidget>
-    <component name="header" ref="header" title="Test Header"></component>
-
+<QWidget spacing="20" margin="20">
     <QLabel>Todo List ({{ computed.todo_count }} items)</QLabel>
 
-    <QWidget>
+    <QWidget spacing="0">
         <QLineEdit id="new-todo"
                value="{{ state.new_todo }}"
                on_change="update_new_todo"
@@ -11,16 +9,20 @@
         <QPushButton on_click="add_todo()">Add</QPushButton>
     </QWidget>
 
-    <QWidget class="todo-items">
+    <QWidget spacing="0" class="todo-items">
         {% if state.todos|length == 0 %}
             <QLabel>No todos yet! Add some above.</QLabel>
         {% else %}
             {% for todo in state.todos %}
-                <QWidget class="horizontal todo-item">
-                    <QCheckbox></QCheckbox>
-                    <QLabel>{{ todo }}</QLabel>
-                    <QPushButton on_click="remove_todo({{ loop.index - 1 }})">Remove</QPushButton>
-                </QWidget>
+                <component
+                    name="todo-item"
+                    ref="todo-item"
+                    text="{{ todo.text }}"
+                    completed="{{ todo.completed }}"
+                    id="{{ loop.index - 1 }}"
+                    on_remove="remove_todo"
+                    on_checked="update_todo_status"
+                ></component>
             {% endfor %}
         {% endif %}
     </QWidget>
