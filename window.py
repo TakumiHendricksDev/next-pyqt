@@ -1,11 +1,12 @@
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtWidgets import QVBoxLayout, QWidget, QMainWindow
 
 
 class NextPyWindow(QMainWindow):
     """Main window that hosts the root component"""
 
-    def __init__(self, root_component, title="NextPy App", width=800, height=600):
+    def __init__(self, root_component, title="NextPy App", width=800, height=600, background_color="white", text_color="black"):
         super().__init__()
 
         # Set up the window
@@ -15,6 +16,16 @@ class NextPyWindow(QMainWindow):
         # Create a central widget
         self.central_widget = QWidget(self)  # Create a QWidget
         self.setCentralWidget(self.central_widget)  # Set it as the central widget
+
+        self.palette = QPalette()
+
+        if background_color is not None:
+            self.palette.setColor(QPalette.ColorRole.Window, QColor(background_color))
+            self.palette.setColor(QPalette.ColorRole.WindowText, QColor(text_color))
+            self.palette.setColor(QPalette.ColorRole.ButtonText, QColor(text_color))
+
+        self.central_widget.setAutoFillBackground(True)
+        self.central_widget.setPalette(self.palette)
 
         # Create a layout and set it on the central widget
         self.layout = QVBoxLayout(self.central_widget)

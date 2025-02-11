@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QLineEdit, QCheckBox
 )
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QPalette
 import re
 
 from utils import is_value_true
@@ -118,6 +118,9 @@ class NextPyLabelElement(NextPyElement):
 class NextPyInputElement(NextPyElement):
     def create_widget(self):
         self.widget = QLineEdit()
+        self.palette = QPalette()
+
+        self.widget.setPalette(self.palette)
 
         try:
             # get the func name of the callback
@@ -150,16 +153,22 @@ class NextPyInputElement(NextPyElement):
 
 
 class NextPyDivElement(NextPyElement):
+    ALIGNMENT_TYPES = {
+        "left": Qt.AlignmentFlag.AlignLeft,
+        "right": Qt.AlignmentFlag.AlignRight,
+        "center": Qt.AlignmentFlag.AlignCenter,
+        "top": Qt.AlignmentFlag.AlignTop,
+        "bottom": Qt.AlignmentFlag.AlignBottom,
+    }
+    MARGIN_LEFT = "margin-left"
+    MARGIN_RIGHT = "margin-right"
+    MARGIN_TOP = "margin-top"
+    MARGIN_BOTTOM = "margin-bottom"
+
     def create_widget(self):
         self.widget = QWidget()
 
-        # Determine layout direction
-        if self.element.get('class') and 'horizontal' in self.element.get('class'):
-            layout = QHBoxLayout()
-        else:
-            layout = QVBoxLayout()
-
-        self._assign_container_attributes(layout)
+        layout = self._assign_container_attributes()
 
         self.widget.setLayout(layout)
 
@@ -169,19 +178,30 @@ class NextPyDivElement(NextPyElement):
         if self.widget:
             self.widget.layout().addWidget(child_widget)
 
-    def _assign_container_attributes(self, layout):
-        # Check if a 'spacing' attribute is defined in the HTML
-        # e.g. <qwidget spacing="10"> ... </qwidget>
-        margin_left = self.element.get('margin-left') or 0
-        margin_top = self.element.get('margin-top') or 0
-        margin_right = self.element.get('margin-right') or 0
-        margin_bottom = self.element.get('margin-bottom') or 0
+    def _assign_container_attributes(self):
+        # Determine layout direction
+        if self.element.get('class') and 'horizontal' in self.element.get('class'):
+            layout = QHBoxLayout()
+        else:
+            layout = QVBoxLayout()
+
+
+        # Get margin on object
+        # e.g. <qwidget margin-left='20' > ... </qwidget>
+        margin = self.element.get('margin') or 0 # defaults to margin unless overwritten
+        margin_left = self.element.get(self.MARGIN_LEFT) or margin
+        margin_top = self.element.get(self.MARGIN_TOP) or margin
+        margin_right = self.element.get(self.MARGIN_RIGHT) or margin
+        margin_bottom = self.element.get(self.MARGIN_BOTTOM) or margin
         try:
+            # Cast to int as we are grabbing it from html
             layout.setContentsMargins(int(margin_left), int(margin_top), int(margin_right), int(margin_bottom))
         except TypeError:
             logging.error(f"Bad margins {margin_left, margin_top, margin_right, margin_bottom}")
 
 
+        # Check if a 'spacing' attribute is defined in the HTML
+        # <QWidget spacing='20' />
         spacing = self.element.get('spacing')
         if spacing is not None:
             try:
@@ -189,12 +209,14 @@ class NextPyDivElement(NextPyElement):
             except ValueError:
                 logging.error(f"Button element spacing {spacing} not an integer")
 
-        align = self.element.get('align')
-        if align is not None:
+        # get alignment type
+        # <QWidget alignment='top' />
+        alignment = self.element.get('alignment')
+        if alignment is not None and alignment in self.ALIGNMENT_TYPES:
             try:
-                layout.setAlignment(getattr(Qt.AlignmentFlag, align))
-            except Exception:
-                logging.error(f"Button element alignment {align} not a valid alignment")
+                layout.setAlignment(self.ALIGNMENT_TYPES[alignment])
+            except Exception as e:
+                logging.error(e)
         else:
             layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
