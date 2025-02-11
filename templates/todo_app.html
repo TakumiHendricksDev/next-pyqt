@@ -1,7 +1,7 @@
-<QWidget>
-    <QLabel style="padding: 0px">Todo List ({{ computed.todo_count }} items)</QLabel>
+<QWidget spacing="20" margin-left="20" margin-top="20">
+    <QLabel>Todo List ({{ computed.todo_count }} items)</QLabel>
 
-    <QWidget>
+    <QWidget spacing="0">
         <QLineEdit id="new-todo"
                value="{{ state.new_todo }}"
                on_change="update_new_todo"
@@ -9,7 +9,7 @@
         <QPushButton on_click="add_todo()">Add</QPushButton>
     </QWidget>
 
-    <QWidget class="todo-items">
+    <QWidget spacing="0" class="todo-items">
         {% if state.todos|length == 0 %}
             <QLabel>No todos yet! Add some above.</QLabel>
         {% else %}

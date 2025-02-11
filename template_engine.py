@@ -28,7 +28,7 @@ class ElementState:
 
 
 class NextPyComponent:
-    def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, events=None, **kwargs):
+    def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, events=None, main_widget=None, **kwargs):
         self.template_path = template_path
         self.template_engine = template_engine
         self._state = {}
@@ -50,7 +50,7 @@ class NextPyComponent:
             'qcheckbox': NextPyCheckboxElement,
         }
 
-        self.main_widget = None
+        self.main_widget = main_widget
         self.parent_component = parent_component
         self.child_components = {}  # Store child component instances
         self.window = None
@@ -216,6 +216,8 @@ class NextPyComponent:
         if not self.main_widget:
             self.main_widget = QWidget()
             self.main_widget.setLayout(QVBoxLayout())
+            self.main_widget.layout().setSpacing(0)
+            self.main_widget.layout().setContentsMargins(0, 0, 0, 0)
 
         # Render template
         html_content = self.template_engine.render_template(

@@ -1,13 +1,14 @@
 # elements.py
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLabel, QLineEdit, QGroupBox, QCheckBox
+    QLabel, QLineEdit, QCheckBox
 )
 from PyQt6.QtGui import QFont
 import re
 
 from utils import is_value_true
+import logging
 
 
 class NextPyElement:
@@ -99,7 +100,7 @@ class NextPyButtonElement(NextPyElement):
         if self.callback_name and self.callback_name in methods:
             self.add_listener(methods[self.callback_name])
         else:
-            print(f"Callback {self.callback_name} not found in methods")  # Debug
+            logging.error(f"Button element callback method {methods} not found in methods list")
 
     def _on_click(self, params):
         for listener in self.listeners:
@@ -121,8 +122,11 @@ class NextPyInputElement(NextPyElement):
         try:
             # get the func name of the callback
             self.callback_name = self.element.get("on_change")
-        except AttributeError:
-            raise ValueError("Button element must have a 'on_click' attribute")
+        except AttributeError as e:
+            raise ValueError(
+                f"{self.__class__.__name__} element is missing required attribute. "
+                f"Expected 'on_click', got: {self.element.attrs}"
+            ) from e
 
         if self.element.get('value'):
             self.widget.setText(self.element.get('value'))
@@ -142,7 +146,7 @@ class NextPyInputElement(NextPyElement):
         if self.callback_name and self.callback_name in methods:
             self.add_listener(methods[self.callback_name])
         else:
-            print(f"Callback {self.callback_name} not found in methods")  # Debug
+            logging.error(f"Button element callback method {methods} not found in methods list")
 
 
 class NextPyDivElement(NextPyElement):
@@ -155,6 +159,8 @@ class NextPyDivElement(NextPyElement):
         else:
             layout = QVBoxLayout()
 
+        self._assign_container_attributes(layout)
+
         self.widget.setLayout(layout)
 
         return super().create_widget()
@@ -163,6 +169,36 @@ class NextPyDivElement(NextPyElement):
         if self.widget:
             self.widget.layout().addWidget(child_widget)
 
+    def _assign_container_attributes(self, layout):
+        # Check if a 'spacing' attribute is defined in the HTML
+        # e.g. <qwidget spacing="10"> ... </qwidget>
+        margin_left = self.element.get('margin-left') or 0
+        margin_top = self.element.get('margin-top') or 0
+        margin_right = self.element.get('margin-right') or 0
+        margin_bottom = self.element.get('margin-bottom') or 0
+        try:
+            layout.setContentsMargins(int(margin_left), int(margin_top), int(margin_right), int(margin_bottom))
+        except TypeError:
+            logging.error(f"Bad margins {margin_left, margin_top, margin_right, margin_bottom}")
+
+
+        spacing = self.element.get('spacing')
+        if spacing is not None:
+            try:
+                layout.setSpacing(int(spacing))
+            except ValueError:
+                logging.error(f"Button element spacing {spacing} not an integer")
+
+        align = self.element.get('align')
+        if align is not None:
+            try:
+                layout.setAlignment(getattr(Qt.AlignmentFlag, align))
+            except Exception:
+                logging.error(f"Button element alignment {align} not a valid alignment")
+        else:
+            layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        return layout
 
 class NextPyCheckboxElement(NextPyElement):
     def create_widget(self):
@@ -185,7 +221,7 @@ class NextPyCheckboxElement(NextPyElement):
         if self.callback_name and self.callback_name in methods:
             self.add_listener(methods[self.callback_name])
         else:
-            print(f"Callback {self.callback_name} not found in methods")  # Debug
+            logging.error(f"Button element callback method {methods} not found in methods list")
 
     def _on_checked(self, params):
         for listener in self.listeners:

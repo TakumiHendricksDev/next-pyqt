@@ -1,3 +1,4 @@
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QVBoxLayout, QWidget, QMainWindow
 
 
@@ -9,7 +10,7 @@ class NextPyWindow(QMainWindow):
 
         # Set up the window
         self.setWindowTitle(title)
-        self.setGeometry(100, 100, width, height)
+        self.setGeometry(50, 50, width, height)
 
         # Create a central widget
         self.central_widget = QWidget(self)  # Create a QWidget
@@ -17,6 +18,10 @@ class NextPyWindow(QMainWindow):
 
         # Create a layout and set it on the central widget
         self.layout = QVBoxLayout(self.central_widget)
+
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Store and render root component
         self.root_component = root_component
@@ -35,7 +40,9 @@ class NextPyWindow(QMainWindow):
 
         # Render root component
         root_widget = self.root_component.render()
+
         self.layout.addWidget(root_widget)
+
 
     def rerender(self):
         """Rerender the window - called by components when needed"""
