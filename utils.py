@@ -1,5 +1,6 @@
 from typing import Any
 import json
+import re
 
 from pydantic import BaseModel
 
@@ -43,3 +44,12 @@ def cast_value(value: str, target_type: Any) -> Any:
 
     # Default to string if no specific casting needed
     return value
+
+def parse_method_call(method_call: str):
+    match = re.match(r'(\w+)\((.*?)\)', method_call)
+    if match:
+        method_name = match.group(1)
+        params = match.group(2).split(',') if match.group(2) else []
+        params = [param.strip() for param in params]  # Remove extra spaces
+        return method_name, params
+    return None, None

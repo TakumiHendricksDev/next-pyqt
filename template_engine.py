@@ -4,7 +4,6 @@ from typing import Dict, Any, Optional, List, get_type_hints
 from dataclasses import dataclass
 
 from jinja2 import Environment, FileSystemLoader
-from pydantic import BaseModel
 
 from elements import (
     NextPyButtonElement, NextPyLabelElement,
@@ -12,9 +11,7 @@ from elements import (
     NextPyCheckboxElement
 )
 
-import json
-
-from utils import is_value_true, cast_value
+from utils import cast_value
 
 
 @dataclass
@@ -26,81 +23,17 @@ class ElementState:
     children: List['ElementState']
     element: dict
 
+class NextPyComponentDidMount:
+    def component_did_mount(self):
+        pass
 
-class NextPyComponent:
-    def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, events=None, main_widget=None, **kwargs):
-        self.template_path = template_path
-        self.template_engine = template_engine
-        self._state = {}
-        self.computed = {}
-        self.methods = {}
-        self.components = {}
-        self.refs = {}
-        self.emits = []
-        self.props = props or {}
-        self.element_instances = {}  # Store element instances by ID
-        self.mapped_events = events
+class NextPyComponentDidUnmount:
+    def component_did_unmount(self):
+        pass
 
-        # Element mapping
-        self.element_classes = {
-            'qpushbutton': NextPyButtonElement,
-            'qlabel': NextPyLabelElement,
-            'qlineedit': NextPyInputElement,
-            'qwidget': NextPyDivElement,
-            'qcheckbox': NextPyCheckboxElement,
-        }
 
-        self.main_widget = main_widget
-        self.parent_component = parent_component
-        self.child_components = {}  # Store child component instances
-        self.window = None
 
-    def set_window(self, window):
-        """Set the window reference for this component"""
-        self.window = window
-
-    @property
-    def state(self):
-        return self._state
-
-    @state.setter
-    def state(self, value):
-        old_state = self._state.copy()
-        self._state = value
-        self._handle_state_change(old_state, self._state)
-
-    def setState(self, new_state: Dict[str, Any], rerender=True):
-        """
-        Set the state of this component
-        :param new_state: the new state to set
-        :param rerender: if rerender is False, will not rerender state
-        :return: void
-        """
-        old_state = self._state.copy()
-        self._state.update(new_state)
-
-        if rerender is True:
-            self._handle_state_change(old_state, self._state)
-
-    def emit_event(self, event, *args, **kwargs):
-        """
-        Emit an event to this component
-        :param event: event key
-        :return: void
-        """
-        if event in self.mapped_events:
-            self.mapped_events[event](*args, **kwargs)
-
-    def _handle_state_change(self, old_state: Dict[str, Any], new_state: Dict[str, Any]):
-        """Handle state changes and trigger selective updates"""
-        changed_keys = set()
-        for key in set(old_state.keys()) | set(new_state.keys()):
-            if old_state.get(key) != new_state.get(key):
-                changed_keys.add(key)
-
-        if changed_keys:
-            self.rerender_component(changed_keys)
-
+class NextPyRenderer(NextPyComponentDidMount, NextPyComponentDidUnmount):
     def create_element(self, element_data) -> Optional[QWidget]:
         """Create an element instance based on element data"""
         if not element_data or not hasattr(element_data, 'element_type'):
@@ -206,7 +139,6 @@ class NextPyComponent:
 
         return props
 
-
     def render(self) -> QWidget:
         """Render the component and return its widget"""
         if not (self.template_engine and self.template_path):
@@ -227,6 +159,9 @@ class NextPyComponent:
 
         # Parse HTML and update widget tree
         self._update_from_html(html_content)
+
+        # Call component_did_mount
+        self.component_did_mount()
 
         return self.main_widget
 
@@ -396,7 +331,7 @@ class NextPyComponent:
         # Store new content
         element_instance.content = new_content
 
-    def _update_children(self, parent_widget, current_children: list, new_children: list):
+    def _update_children(self, parent_widget: "QWidget", current_children: list[ElementState], new_children: list[ElementState]):
         """
         Update child widgets within a container widget
 
@@ -454,7 +389,8 @@ class NextPyComponent:
             else:
                 i += 1
 
-    def _get_element_key(self, element_state) -> str:
+    @staticmethod
+    def _get_element_key(element_state: "ElementState") -> str:
         """
         Get a unique key for an element state to use in diffing
 
@@ -475,27 +411,17 @@ class NextPyComponent:
         # Fall back to element type + content as key
         return f"{element_state.element_type}:{element_state.content}"
 
-    def _build_stylesheet(self, style_dict: dict) -> str:
-        """
-        Convert a style dictionary to a Qt stylesheet string
-
-        Args:
-            style_dict: Dictionary of style properties
-
-        Returns:
-            str: Formatted Qt stylesheet
-        """
+    @staticmethod
+    def _build_stylesheet(style_dict: dict) -> str:
+        """Convert a style dictionary to a Qt stylesheet string."""
         if not style_dict:
             return ""
-
-        # Convert style dictionary to Qt stylesheet syntax
-        styles = []
-        for key, value in style_dict.items():
-            # Convert camelCase to kebab-case
-            qt_key = ''.join([f'-{c.lower()}' if c.isupper() else c for c in key]).lstrip('-')
-            styles.append(f"{qt_key}: {value};")
-
-        return ' '.join(styles)
+        # Convert camelCase keys to kebab-case and build stylesheet parts
+        stylesheet_parts = [
+            f"{''.join(f'-{c.lower()}' if c.isupper() else c for c in key).lstrip('-')}: {value};"
+            for key, value in style_dict.items()
+        ]
+        return ' '.join(stylesheet_parts)
 
     def rerender_component(self, changed_keys: Optional[set] = None):
         """Rerender component, optionally based on changed state keys"""
@@ -517,13 +443,119 @@ class NextPyComponent:
         )
         self._update_from_html(html_content)
 
-    def _child_updated(self, child_component):
+    def _child_updated(self, child_component: "NextPyComponent"):
         """Handle updates from child components"""
         # Implement if needed - could trigger partial parent update
         pass
 
+class NextPyComponent(NextPyRenderer):
+    def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, events=None, main_widget=None, **kwargs):
+        """
+        Constructor for NextPyComponent
+        :param template_path: the path of the html template
+        :param template_engine: the engine of the html template. This allows to override the default engine of the html template
+        :param props: the props of the component.
+        :param parent_component: the parent component of the component.
+        :param events: the events of the component.
+        :param main_widget: A reference to the main widget of the component.
+        :param kwargs: any other keyword arguments are passed to the parent component.
+        """
+        self.template_path = template_path
+        self.template_engine = template_engine
+        self._state = {}
+        self.computed = {}
+        self.methods = {}
+        self.components = {}
+        self.refs = {}
+        self.emits = []
+        self.props = props or {}
+        self.element_instances = {}  # Store element instances by ID
+        self.mapped_events = events
+
+        # Element mapping
+        self.element_classes = {
+            'qpushbutton': NextPyButtonElement,
+            'qlabel': NextPyLabelElement,
+            'qlineedit': NextPyInputElement,
+            'qwidget': NextPyDivElement,
+            'qcheckbox': NextPyCheckboxElement,
+        }
+
+        self.main_widget = main_widget
+        self.parent_component = parent_component
+        self.child_components = {}  # Store child component instances
+        self.window = None
+
+    def set_window(self, window):
+        """
+        Set the window reference for this component
+        :param window: window reference
+        :return: void
+        """
+        self.window = window
+
+    @property
+    def state(self):
+        """
+        Returns the current state of this component
+        :return: state object
+        """
+        return self._state
+
+    @state.setter
+    def state(self, value):
+        """
+        Set the state of this component
+        :param value:
+        :return:
+        """
+        old_state = self._state.copy()
+        self._state = value
+        self._handle_state_change(old_state, self._state)
+
+    def set_state(self, new_state: Dict[str, Any], rerender=True):
+        """
+        Set the state of this component
+        :param new_state: the new state to set
+        :param rerender: if rerender is False, will not rerender state
+        :return: void
+        """
+        old_state = self._state.copy()
+        self._state.update(new_state)
+
+        if rerender is True:
+            self._handle_state_change(old_state, self._state)
+
+    def emit_event(self, event, *args, **kwargs):
+        """
+        Emit an event to this component
+        :param event: event key
+        :return: void
+        """
+        if event in self.mapped_events:
+            self.mapped_events[event](*args, **kwargs)
+
+    def _handle_state_change(self, old_state: Dict[str, Any], new_state: Dict[str, Any]):
+        """Handle state changes and trigger selective updates"""
+        changed_keys = set()
+        for key in set(old_state.keys()) | set(new_state.keys()):
+            if old_state.get(key) != new_state.get(key):
+                changed_keys.add(key)
+
+        if changed_keys:
+            self.rerender_component(changed_keys)
+
+    def component_did_mount(self) -> None:
+        """
+        Mount this component
+        :return: void
+        """
+        pass
 
 class NextPyTemplate:
+    """
+    A wrapper component for rendering templates with Jinja2 templates
+    """
     def __init__(self, template_dir="."):
         self.env = Environment(loader=FileSystemLoader(template_dir))  # Load templates from the current directory
 

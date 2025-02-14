@@ -21,7 +21,7 @@ class TodoApp(NextPyComponent):
 
     def add_todo(self):
         if self.state['new_todo']:
-            self.setState({
+            self.set_state({
                 'todos': self.state['todos'] + [{
                     'text': self.state['new_todo'],
                     'completed': False
@@ -31,13 +31,13 @@ class TodoApp(NextPyComponent):
             # Only updates the todo list and clears the input
 
     def update_new_todo(self, value):
-        self.setState({
+        self.set_state({
             **self.state,
             'new_todo': value
         }, rerender=False)
 
     def remove_todo(self, index):
-        self.setState({
+        self.set_state({
             **self.state,
             "todos": self.state["todos"][:index] + self.state["todos"][index + 1:]
         })
@@ -45,4 +45,4 @@ class TodoApp(NextPyComponent):
     def update_todo_status(self, index, completed):
         todos = self.state['todos'].copy()
         todos[index]['completed'] = completed
-        self.setState({'todos': todos})
+        self.set_state({'todos': todos})

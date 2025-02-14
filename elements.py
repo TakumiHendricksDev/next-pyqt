@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QFont, QPalette
 import re
 
-from utils import is_value_true
+from utils import is_value_true, parse_method_call
 import logging
 
 
@@ -16,12 +16,11 @@ class NextPyElement:
         self.element = element
         self.listeners = []
         self.widget = None
+        self.callback_name = None
+        self.callback_params = None
 
     def add_listener(self, listener):
         self.listeners.append(listener)
-
-    def attach_callback(self, methods):
-        pass
 
     def create_widget(self):
         if hasattr(self.element, 'style'):
@@ -29,15 +28,9 @@ class NextPyElement:
 
         return self.widget
 
-    @staticmethod
-    def parse_method_call(method_call: str):
-        match = re.match(r'(\w+)\((.*?)\)', method_call)
-        if match:
-            method_name = match.group(1)
-            params = match.group(2).split(',') if match.group(2) else []
-            params = [param.strip() for param in params]  # Remove extra spaces
-            return method_name, params
-        return None, None
+    def attach_callback(self, methods: dict):
+        if self.callback_name in methods:
+            self.add_listener(methods[self.callback_name])
 
     def apply_styles(self, styles):
         """Apply styles to the widget"""
@@ -59,25 +52,6 @@ class NextPyElement:
         for key, value in style_dict.items():
             stylesheet_parts.append(f"{key}: {value};")
 
-            # if key == 'background-color':
-            #     stylesheet_parts.append(f"background-color: {value};")
-            # elif key == 'color':
-            #     stylesheet_parts.append(f"color: {value};")
-            # elif key == 'font-size':
-            #     if value.endswith('px'):
-            #         value = f"{int(value[:-2])}pt"
-            #     stylesheet_parts.append(f"font-size: {value};")
-            # elif key == 'padding':
-            #     stylesheet_parts.append(f"padding: {value};")
-            # elif key == 'margin':
-            #     stylesheet_parts.append(f"margin: {value};")
-            # elif key == 'border':
-            #     stylesheet_parts.append(f"border: {value};")
-            # elif key == 'border-radius':
-            #     stylesheet_parts.append(f"border-radius: {value};")
-            # elif key == 'font-weight' and value == 'bold':
-            #     stylesheet_parts.append("font-weight: bold;")
-
         if stylesheet_parts:
             self.widget.setStyleSheet(' '.join(stylesheet_parts))
 
@@ -88,19 +62,13 @@ class NextPyButtonElement(NextPyElement):
 
         try:
             # get the func name of the callback
-            self.callback_name, self.callback_params = self.parse_method_call(self.element.get("on_click"))
+            self.callback_name, self.callback_params = parse_method_call(self.element.get("on_click"))
         except AttributeError:
             raise ValueError("Button element must have a 'on_click' attribute")
 
         self.widget.clicked.connect(lambda: self._on_click(self.callback_params))
 
         return super().create_widget()
-
-    def attach_callback(self, methods):
-        if self.callback_name and self.callback_name in methods:
-            self.add_listener(methods[self.callback_name])
-        else:
-            logging.error(f"Button element callback method {methods} not found in methods list")
 
     def _on_click(self, params):
         for listener in self.listeners:
@@ -144,12 +112,6 @@ class NextPyInputElement(NextPyElement):
     def _on_value_changed(self, value):
         for listener in self.listeners:
             listener(value)
-
-    def attach_callback(self, methods):
-        if self.callback_name and self.callback_name in methods:
-            self.add_listener(methods[self.callback_name])
-        else:
-            logging.error(f"Button element callback method {methods} not found in methods list")
 
 
 class NextPyDivElement(NextPyElement):
@@ -228,7 +190,7 @@ class NextPyCheckboxElement(NextPyElement):
 
         try:
             # get the func name of the callback
-            self.callback_name, self.callback_params = self.parse_method_call(self.element.get("on_checked"))
+            self.callback_name, self.callback_params = parse_method_call(self.element.get("on_checked"))
         except AttributeError:
             raise ValueError("Button element must have a 'on_checked' attribute")
 
@@ -238,12 +200,6 @@ class NextPyCheckboxElement(NextPyElement):
         self.widget.clicked.connect(lambda: self._on_checked(self.callback_params))
 
         return super().create_widget()
-
-    def attach_callback(self, methods):
-        if self.callback_name and self.callback_name in methods:
-            self.add_listener(methods[self.callback_name])
-        else:
-            logging.error(f"Button element callback method {methods} not found in methods list")
 
     def _on_checked(self, params):
         for listener in self.listeners:
