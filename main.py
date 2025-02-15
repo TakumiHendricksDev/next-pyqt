@@ -1,6 +1,3 @@
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout
-from pydantic import BaseModel
-
 from app import TodoApp
 from template_engine import NextPyTemplate
 from window import NextPyWindow

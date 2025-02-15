@@ -1,5 +1,5 @@
 from components.todo_item import TodoItem
-from template_engine import NextPyComponent
+from component import NextPyComponent
 
 class TodoApp(NextPyComponent):
     def __init__(self, *args, **kwargs):

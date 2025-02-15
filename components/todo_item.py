@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from template_engine import NextPyComponent
+from component import NextPyComponent
 
 
 class TodoItemProps(BaseModel):
