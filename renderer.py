@@ -419,7 +419,7 @@ class NextPyRenderer(NextPyComponentLifecycle, ABC):
 
         # If this is the root component, tell the window to rerender
         if self.window:
-            self.window.rerender()
+            return self.window.rerender()
 
         # If this is a child component, update through the parent
         elif self.parent_component:

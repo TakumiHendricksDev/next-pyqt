@@ -6,7 +6,7 @@ class TodoApp(NextPyComponent):
         super().__init__(*args, **kwargs)
         self.name = "Todo App"
         self.template_path = 'todo_app.html'
-        self.state = {
+        self._state = {
             'todos': [],
             'new_todo': ''
         }

@@ -37,6 +37,7 @@ class NextPyComponent(NextPyRenderer):
             'qlineedit': NextPyInputElement,
             'qwidget': NextPyDivElement,
             'qcheckbox': NextPyCheckboxElement,
+            "component": NextPyDivElement,
         }
 
         self.main_widget = main_widget
