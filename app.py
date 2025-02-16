@@ -4,6 +4,7 @@ from component import NextPyComponent
 class TodoApp(NextPyComponent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.name = "Todo App"
         self.template_path = 'todo_app.html'
         self.state = {
             'todos': [],

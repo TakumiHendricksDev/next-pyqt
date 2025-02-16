@@ -6,7 +6,7 @@ from renderer import NextPyRenderer
 
 
 class NextPyComponent(NextPyRenderer):
-    def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, events=None, main_widget=None, **kwargs):
+    def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, events=None, main_widget=None, name=None, **kwargs):
         """
         Constructor for NextPyComponent
         :param template_path: the path of the html template
@@ -20,6 +20,7 @@ class NextPyComponent(NextPyRenderer):
         self.template_path = template_path
         self.template_engine = template_engine
         self._state = {}
+        self.name = name
         self.computed = {}
         self.methods = {}
         self.components = {}
@@ -115,3 +116,10 @@ class NextPyComponent(NextPyRenderer):
         :return: void
         """
         pass
+
+    def __str__(self):
+        """
+        return a string representation of this component
+        :return: return the name of the component
+        """
+        return f"{self.name}"
