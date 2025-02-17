@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget, QMainWindow
 class NextPyWindow(QMainWindow):
     """Main window that hosts the root component"""
 
-    def __init__(self, root_component, router, title="NextPy App", width=800, height=600, background_color="white", text_color="black"):
+    def __init__(self, root_component, router, title="NextPy App", width=800, height=600, background_color="#222222", text_color="#d2d1d0"):
         super().__init__()
 
         # setup router
