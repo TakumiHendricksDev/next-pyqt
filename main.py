@@ -6,7 +6,6 @@ from template_engine import NextPyTemplate
 from window import NextPyWindow
 
 def hello_world_component_factory(*kwargs):
-    # You can create a component simply with the base NextPyComponent if it's simple
     return HelloWorldApp(template_engine=NextPyTemplate("templates"), *kwargs)
 
 def root_component_factory(*kwargs):
