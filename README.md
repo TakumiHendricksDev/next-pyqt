@@ -5,7 +5,7 @@
 
 ## Where is this right now?
 Right now the project handles states, computed properties, methods, events, and props. 
-This project as the current state is nowhere near "production usuable". I recommend if you want to use this, copy the repo into a personal one.
+This project as the current state is nowhere near "production usuable". I recommend, If you would like to try this repo out, go ahead and either copy the repo as a template or download the files.
 
 ## How to install.
 1. First clone the git repo by doing `git clone https://github.com/TakumiHendricksDev/next-pyqt.git`
