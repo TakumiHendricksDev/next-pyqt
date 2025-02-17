@@ -6,8 +6,11 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget, QMainWindow
 class NextPyWindow(QMainWindow):
     """Main window that hosts the root component"""
 
-    def __init__(self, root_component, title="NextPy App", width=800, height=600, background_color="white", text_color="black"):
+    def __init__(self, root_component, router, title="NextPy App", width=800, height=600, background_color="white", text_color="black"):
         super().__init__()
+
+        # setup router
+        self.router = router
 
         # Set up the window
         self.setWindowTitle(title)
@@ -40,6 +43,17 @@ class NextPyWindow(QMainWindow):
 
         # Initial render
         self.render()
+
+    def set_current_component(self, component):
+        """Set a new root component and re-render the window"""
+        self.root_component = component
+        self.root_component.set_window(self)
+        self.render()
+
+    def navigate_to(self, route_name, **kwargs):
+        """Use the router to navigate and update the window's current component"""
+        new_component = self.router.navigate(route_name, **kwargs)
+        self.set_current_component(new_component)
 
     def render(self):
         """Render or update the root component"""
