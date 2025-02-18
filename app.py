@@ -21,7 +21,8 @@ class TodoApp(NextPyComponent):
         self.computed['todo_count'] = lambda: len(self.state['todos'])
 
     def go_to_hello(self):
-        self.window.navigate_to('hello_world')
+        if self.window:
+            self.window.navigate_to('hello_world')
 
     def add_todo(self):
         if self.state['new_todo']:

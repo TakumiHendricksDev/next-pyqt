@@ -1,4 +1,3 @@
-from component import NextPyComponent
 from app import TodoApp
 from components.hello_world import HelloWorldApp
 from router import NextPyRouter

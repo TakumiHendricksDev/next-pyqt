@@ -1,11 +1,9 @@
 # elements.py
-from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QLineEdit, QCheckBox
 )
 from PyQt6.QtGui import QFont, QPalette
-import re
 
 from utils import is_value_true, parse_method_call
 import logging
