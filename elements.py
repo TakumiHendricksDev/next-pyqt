@@ -1,8 +1,13 @@
 # elements.py
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-    QLabel, QLineEdit, QCheckBox
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QLineEdit,
+    QCheckBox,
 )
 from PyQt6.QtGui import QFont, QPalette
 
@@ -22,8 +27,8 @@ class NextPyElement:
         self.listeners.append(listener)
 
     def create_widget(self):
-        if hasattr(self.element, 'style'):
-            self.apply_styles(self.element.get('style'))
+        if hasattr(self.element, "style"):
+            self.apply_styles(self.element.get("style"))
 
         return self.widget
 
@@ -41,10 +46,10 @@ class NextPyElement:
 
         style_dict = {}
 
-        styles = styles.split(';')
+        styles = styles.split(";")
         for style in styles:
             if style:
-                key, value = style.split(':')
+                key, value = style.split(":")
                 style_dict[key.strip()] = value.strip()
 
         stylesheet_parts = []
@@ -52,7 +57,7 @@ class NextPyElement:
             stylesheet_parts.append(f"{key}: {value};")
 
         if stylesheet_parts:
-            self.widget.setStyleSheet(' '.join(stylesheet_parts))
+            self.widget.setStyleSheet(" ".join(stylesheet_parts))
 
 
 class NextPyButtonElement(NextPyElement):
@@ -61,7 +66,9 @@ class NextPyButtonElement(NextPyElement):
 
         try:
             # get the func name of the callback
-            self.callback_name, self.callback_params = parse_method_call(self.element.get("on_click"))
+            self.callback_name, self.callback_params = parse_method_call(
+                self.element.get("on_click")
+            )
         except AttributeError:
             raise ValueError("Button element must have a 'on_click' attribute")
 
@@ -98,11 +105,11 @@ class NextPyInputElement(NextPyElement):
                 f"Expected 'on_click', got: {self.element.attrs}"
             ) from e
 
-        if self.element.get('value'):
-            self.widget.setText(self.element.get('value'))
+        if self.element.get("value"):
+            self.widget.setText(self.element.get("value"))
 
-        if self.element.get('placeholder'):
-            self.widget.setPlaceholderText(self.element.get('placeholder'))
+        if self.element.get("placeholder"):
+            self.widget.setPlaceholderText(self.element.get("placeholder"))
 
         self.widget.textChanged.connect(lambda x: self._on_value_changed(x))
 
@@ -141,29 +148,33 @@ class NextPyDivElement(NextPyElement):
 
     def _assign_container_attributes(self):
         # Determine layout direction
-        if self.element.get('class') and 'horizontal' in self.element.get('class'):
+        if self.element.get("class") and "horizontal" in self.element.get("class"):
             layout = QHBoxLayout()
         else:
             layout = QVBoxLayout()
 
-
         # Get margin on object
         # e.g. <qwidget margin-left='20' > ... </qwidget>
-        margin = self.element.get('margin') or 0 # defaults to margin unless overwritten
+        margin = (
+            self.element.get("margin") or 0
+        )  # defaults to margin unless overwritten
         margin_left = self.element.get(self.MARGIN_LEFT) or margin
         margin_top = self.element.get(self.MARGIN_TOP) or margin
         margin_right = self.element.get(self.MARGIN_RIGHT) or margin
         margin_bottom = self.element.get(self.MARGIN_BOTTOM) or margin
         try:
             # Cast to int as we are grabbing it from html
-            layout.setContentsMargins(int(margin_left), int(margin_top), int(margin_right), int(margin_bottom))
+            layout.setContentsMargins(
+                int(margin_left), int(margin_top), int(margin_right), int(margin_bottom)
+            )
         except TypeError:
-            logging.error(f"Bad margins {margin_left, margin_top, margin_right, margin_bottom}")
-
+            logging.error(
+                f"Bad margins {margin_left, margin_top, margin_right, margin_bottom}"
+            )
 
         # Check if a 'spacing' attribute is defined in the HTML
         # <QWidget spacing='20' />
-        spacing = self.element.get('spacing')
+        spacing = self.element.get("spacing")
         if spacing is not None:
             try:
                 layout.setSpacing(int(spacing))
@@ -172,7 +183,7 @@ class NextPyDivElement(NextPyElement):
 
         # get alignment type
         # <QWidget alignment='top' />
-        alignment = self.element.get('alignment')
+        alignment = self.element.get("alignment")
         if alignment is not None and alignment in self.ALIGNMENT_TYPES:
             try:
                 layout.setAlignment(self.ALIGNMENT_TYPES[alignment])
@@ -183,13 +194,16 @@ class NextPyDivElement(NextPyElement):
 
         return layout
 
+
 class NextPyCheckboxElement(NextPyElement):
     def create_widget(self):
         self.widget = QCheckBox()
 
         try:
             # get the func name of the callback
-            self.callback_name, self.callback_params = parse_method_call(self.element.get("on_checked"))
+            self.callback_name, self.callback_params = parse_method_call(
+                self.element.get("on_checked")
+            )
         except AttributeError:
             raise ValueError("Button element must have a 'on_checked' attribute")
 

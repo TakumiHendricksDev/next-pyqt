@@ -6,7 +6,18 @@ from renderer import NextPyRenderer
 
 class NextPyComponent(NextPyComponentLifecycle):
     template_path = None
-    def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, events=None, main_widget=None, name=None, **kwargs):
+
+    def __init__(
+        self,
+        template_path=None,
+        template_engine=None,
+        props=None,
+        parent_component=None,
+        events=None,
+        main_widget=None,
+        name=None,
+        **kwargs,
+    ):
         """
         Constructor for NextPyComponent
         :param template_path: the path of the html template
@@ -34,7 +45,12 @@ class NextPyComponent(NextPyComponentLifecycle):
         self.parent_component = parent_component
 
         # Initialize the renderer
-        self.renderer = NextPyRenderer(template_engine=self.template_engine, template_path=self.template_path, main_widget=main_widget, window=self.window)
+        self.renderer = NextPyRenderer(
+            template_engine=self.template_engine,
+            template_path=self.template_path,
+            main_widget=main_widget,
+            window=self.window,
+        )
 
         self.renderer.methods = self.get_methods
         self.renderer.computed = self.get_computed
@@ -136,7 +152,9 @@ class NextPyComponent(NextPyComponentLifecycle):
         if event in self.mapped_events:
             self.mapped_events[event](*args, **kwargs)
 
-    def _handle_state_change(self, old_state: Dict[str, Any], new_state: Dict[str, Any]):
+    def _handle_state_change(
+        self, old_state: Dict[str, Any], new_state: Dict[str, Any]
+    ):
         """Handle state changes and trigger selective updates"""
         changed_keys = set()
         for key in set(old_state.keys()) | set(new_state.keys()):

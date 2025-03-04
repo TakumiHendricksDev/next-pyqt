@@ -1,3 +1,5 @@
+"""Window module for NextPy"""
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtWidgets import QVBoxLayout, QWidget, QMainWindow
@@ -6,7 +8,16 @@ from PyQt6.QtWidgets import QVBoxLayout, QWidget, QMainWindow
 class NextPyWindow(QMainWindow):
     """Main window that hosts the root component"""
 
-    def __init__(self, root_component, router, title="NextPy App", width=800, height=600, background_color="#222222", text_color="#d2d1d0"):
+    def __init__(
+        self,
+        root_component,
+        router,
+        title="NextPy App",
+        width=800,
+        height=600,
+        background_color="#222222",
+        text_color="#d2d1d0",
+    ):
         super().__init__()
 
         # setup router
@@ -39,7 +50,9 @@ class NextPyWindow(QMainWindow):
 
         # Store and render root component
         self.root_component = root_component
-        self.root_component.set_window(self)  # Allow component to trigger window updates
+        self.root_component.set_window(
+            self
+        )  # Allow component to trigger window updates
 
         # Initial render
         self.render()
@@ -67,7 +80,6 @@ class NextPyWindow(QMainWindow):
         root_widget = self.root_component.render()
 
         self.layout.addWidget(root_widget)
-
 
     def rerender(self):
         """Rerender the window - called by components when needed"""
