@@ -3,8 +3,8 @@ from abc import ABC
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from bs4 import BeautifulSoup
 
-from elements import NextPyDivElement
-from lifecycle import NextPyComponentLifecycle
+from elements import NextPyDivElement, NextPyButtonElement, NextPyLabelElement, NextPyInputElement, \
+    NextPyCheckboxElement
 from typing import Dict, List, Optional, get_type_hints
 
 from utils import cast_value
@@ -22,7 +22,34 @@ class ElementState:
     element: dict
 
 
-class NextPyRenderer(NextPyComponentLifecycle, ABC):
+class NextPyRenderer(object):
+    def __init__(self, template_engine=None, template_path=None, main_widget=None, window=None):
+        self.template_engine = template_engine
+        self.template_path = template_path
+        self.main_widget = main_widget
+        self.element_instances = {}  # Store element instances by ID
+        self.window = window
+
+        self.methods = None
+        self.props = None
+        self.state = None
+        self.computed = None
+        self.components = None
+        self.refs = {}
+        self.child_components = {}
+
+        self.component_did_mount = None
+
+        # Element mapping
+        self.element_classes = {
+            'qpushbutton': NextPyButtonElement,
+            'qlabel': NextPyLabelElement,
+            'qlineedit': NextPyInputElement,
+            'qwidget': NextPyDivElement,
+            'qcheckbox': NextPyCheckboxElement,
+            "component": NextPyDivElement,
+        }
+
     def create_element(self, element_data) -> Optional[QWidget]:
         """Create an element instance based on element data"""
         if not element_data or not hasattr(element_data, 'element_type'):
@@ -52,7 +79,7 @@ class NextPyRenderer(NextPyComponentLifecycle, ABC):
         widget = element_instance.create_widget()
 
         # Attach component methods as callbacks
-        element_instance.attach_callback(self.methods)
+        element_instance.attach_callback(self.methods())
 
         # Handle children for container elements
         if isinstance(element_instance, NextPyDivElement):
@@ -67,11 +94,11 @@ class NextPyRenderer(NextPyComponentLifecycle, ABC):
     def _create_component_element(self, element_data) -> Optional[QWidget]:
         """Create a child component instance"""
         component_name = element_data.get('name')
-        if component_name not in self.components:
+        if component_name not in self.components():
             return None
 
         # Get component class and create instance
-        component_class = self.components[component_name]
+        component_class = self.components()[component_name]
         props = self.cast_props_from_html(component_class, element_data)
 
         events = {}
@@ -79,7 +106,7 @@ class NextPyRenderer(NextPyComponentLifecycle, ABC):
             event_call = f"on_{event_name}"
             get_call = element_data.get(event_call)
             if get_call is not None:
-                events[event_name] = self.methods.get(get_call, None)
+                events[event_name] = self.methods().get(get_call, None)
 
         # Create component instance
         component_instance = component_class(
@@ -143,7 +170,10 @@ class NextPyRenderer(NextPyComponentLifecycle, ABC):
         # Render template
         html_content = self.template_engine.render_template(
             self.template_path,
-            component=self
+            state=self.state(),
+            computed={k: v() for k, v in self.computed().items()},
+            methods=self.methods(),
+            props=self.props(),
         )
 
         # Parse HTML and update widget tree
@@ -175,7 +205,7 @@ class NextPyRenderer(NextPyComponentLifecycle, ABC):
         # Update widget tree
         self.main_widget = self._update_element_tree(self.main_widget, current_state, new_state)
 
-    def _get_element_state(self, widget: QWidget) -> ElementState:
+    def _get_element_state(self, widget: QWidget) -> ElementState | None:
         """Get element state from widget"""
         if not widget:
             return None
@@ -189,12 +219,20 @@ class NextPyRenderer(NextPyComponentLifecycle, ABC):
         if not element_instance:
             return None
 
+        children = [
+            child for child in element_instance.children
+            if child.name is not None
+        ]
+
         return ElementState(
             element_type=type(element_instance).__name__,
-            attributes=self._get_element_attributes(element_instance),
-            content=self._get_element_content(element_instance),
+            attributes=element_instance.attrs,
+            content=element_instance.string if element_instance.string else '',
             element=element_instance,
-            children=self._get_child_states(widget)
+            children=[
+                self._get_element_state_from_soup(child)
+                for child in children
+            ]
         )
 
     def _get_element_state_from_soup(self, element) -> Optional[ElementState]:
@@ -418,21 +456,15 @@ class NextPyRenderer(NextPyComponentLifecycle, ABC):
             return
 
         # If this is the root component, tell the window to rerender
-        if self.window:
+        if self.window is not None:
             return self.window.rerender()
-
-        # If this is a child component, update through the parent
-        elif self.parent_component:
-            self.parent_component._child_updated(self)
 
         # Get new content and update widget tree
         html_content = self.template_engine.render_template(
             self.template_path,
-            component=self
+            state=self.state(),
+            computed={k: v() for k, v in self.computed().items()},
+            methods=self.methods(),
+            props=self.props(),
         )
         self._update_from_html(html_content)
-
-    def _child_updated(self, child_component: "NextPyComponent"):
-        """Handle updates from child components"""
-        # Implement if needed - could trigger partial parent update
-        pass

@@ -2,10 +2,10 @@ from components.todo_item import TodoItem
 from component import NextPyComponent
 
 class TodoApp(NextPyComponent):
+    template_path = 'todo_app.html'
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.name = "Todo App"
-        self.template_path = 'todo_app.html'
         self._state = {
             'todos': [],
             'new_todo': ''

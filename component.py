@@ -1,11 +1,11 @@
 from typing import Dict, Any
 
-from elements import NextPyButtonElement, NextPyLabelElement, NextPyInputElement, NextPyDivElement, \
-    NextPyCheckboxElement
+from lifecycle import NextPyComponentLifecycle
 from renderer import NextPyRenderer
 
 
-class NextPyComponent(NextPyRenderer):
+class NextPyComponent(NextPyComponentLifecycle):
+    template_path = None
     def __init__(self, template_path=None, template_engine=None, props=None, parent_component=None, events=None, main_widget=None, name=None, **kwargs):
         """
         Constructor for NextPyComponent
@@ -17,8 +17,7 @@ class NextPyComponent(NextPyRenderer):
         :param main_widget: A reference to the main widget of the component.
         :param kwargs: any other keyword arguments are passed to the parent component.
         """
-        self.template_path = template_path
-        self.template_engine = template_engine
+        self.template_path = template_path or self.template_path
         self._state = {}
         self.name = name
         self.computed = {}
@@ -27,23 +26,58 @@ class NextPyComponent(NextPyRenderer):
         self.refs = {}
         self.emits = []
         self.props = props or {}
-        self.element_instances = {}  # Store element instances by ID
         self.mapped_events = events
-
-        # Element mapping
-        self.element_classes = {
-            'qpushbutton': NextPyButtonElement,
-            'qlabel': NextPyLabelElement,
-            'qlineedit': NextPyInputElement,
-            'qwidget': NextPyDivElement,
-            'qcheckbox': NextPyCheckboxElement,
-            "component": NextPyDivElement,
-        }
+        self.template_engine = template_engine
+        self.window = None
 
         self.main_widget = main_widget
         self.parent_component = parent_component
-        self.child_components = {}  # Store child component instances
-        self.window = None
+
+        # Initialize the renderer
+        self.renderer = NextPyRenderer(template_engine=self.template_engine, template_path=self.template_path, main_widget=main_widget, window=self.window)
+
+        self.renderer.methods = self.get_methods
+        self.renderer.computed = self.get_computed
+        self.renderer.props = self.get_props
+        self.renderer.state = self.get_state
+
+        self.renderer.component_did_mount = self.component_did_mount
+        self.renderer.components = self.get_components
+
+    def get_methods(self):
+        """
+        Get the methods of this component
+        :return: the methods of this component
+        """
+        return self.methods
+
+    def get_computed(self):
+        """
+        Get the computed properties of this component
+        :return: the computed properties of this component
+        """
+        return self.computed
+
+    def get_props(self):
+        """
+        Get the props of this component
+        :return: the props of this component
+        """
+        return self.props
+
+    def get_state(self):
+        """
+        Get the state of this component
+        :return: the state of this component
+        """
+        return self.state
+
+    def get_components(self):
+        """
+        Get the components of this component
+        :return: the components of this component
+        """
+        return self.components
 
     def set_window(self, window):
         """
@@ -52,6 +86,7 @@ class NextPyComponent(NextPyRenderer):
         :return: void
         """
         self.window = window
+        self.renderer.window = self.window
 
     @property
     def state(self):
@@ -71,6 +106,13 @@ class NextPyComponent(NextPyRenderer):
         old_state = self._state.copy()
         self._state = value
         self._handle_state_change(old_state, self._state)
+
+    def render(self):
+        """
+        Render the component
+        :return: void
+        """
+        return self.renderer.render()
 
     def set_state(self, new_state: Dict[str, Any], rerender=True):
         """
@@ -102,7 +144,7 @@ class NextPyComponent(NextPyRenderer):
                 changed_keys.add(key)
 
         if changed_keys:
-            self.rerender_component(changed_keys)
+            self.renderer.rerender_component(changed_keys)
 
     def component_did_mount(self) -> None:
         """
