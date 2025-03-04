@@ -6,7 +6,7 @@ class TodoApp(NextPyComponent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.name = "Todo App"
-        self._state = {
+        self.state = {
             'todos': [],
             'new_todo': ''
         }

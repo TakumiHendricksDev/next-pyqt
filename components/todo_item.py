@@ -16,7 +16,7 @@ class TodoItem(NextPyComponent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.name = "Todo Item"
-        self._state = {
+        self.state = {
             'is_editing': False,
         }
         self.methods['toggle_complete'] = self.toggle_complete
