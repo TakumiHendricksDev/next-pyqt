@@ -3,8 +3,13 @@ from abc import ABC
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from bs4 import BeautifulSoup
 
-from elements import NextPyDivElement, NextPyButtonElement, NextPyLabelElement, NextPyInputElement, \
-    NextPyCheckboxElement
+from elements import (
+    NextPyDivElement,
+    NextPyButtonElement,
+    NextPyLabelElement,
+    NextPyInputElement,
+    NextPyCheckboxElement,
+)
 from typing import Dict, List, Optional, get_type_hints
 
 from utils import cast_value
@@ -15,15 +20,18 @@ from dataclasses import dataclass
 @dataclass
 class ElementState:
     """Represents the state of an element for comparison"""
+
     element_type: str
     attributes: Dict[str, str]
     content: str
-    children: List['ElementState']
+    children: List["ElementState"]
     element: dict
 
 
 class NextPyRenderer(object):
-    def __init__(self, template_engine=None, template_path=None, main_widget=None, window=None):
+    def __init__(
+        self, template_engine=None, template_path=None, main_widget=None, window=None
+    ):
         self.template_engine = template_engine
         self.template_path = template_path
         self.main_widget = main_widget
@@ -42,23 +50,23 @@ class NextPyRenderer(object):
 
         # Element mapping
         self.element_classes = {
-            'qpushbutton': NextPyButtonElement,
-            'qlabel': NextPyLabelElement,
-            'qlineedit': NextPyInputElement,
-            'qwidget': NextPyDivElement,
-            'qcheckbox': NextPyCheckboxElement,
+            "qpushbutton": NextPyButtonElement,
+            "qlabel": NextPyLabelElement,
+            "qlineedit": NextPyInputElement,
+            "qwidget": NextPyDivElement,
+            "qcheckbox": NextPyCheckboxElement,
             "component": NextPyDivElement,
         }
 
     def create_element(self, element_data) -> Optional[QWidget]:
         """Create an element instance based on element data"""
-        if not element_data or not hasattr(element_data, 'element_type'):
+        if not element_data or not hasattr(element_data, "element_type"):
             return None
 
         element_type = element_data.name.lower()  # Normalize element type
 
         # Handle component elements
-        if element_type == 'component':
+        if element_type == "component":
             return self._create_component_element(element_data)
 
         element_class = self.element_classes.get(element_type)
@@ -71,7 +79,7 @@ class NextPyRenderer(object):
         element_instance = element_class(element_data)
 
         # Store reference if ID exists
-        element_id = element_data.get('id', None)
+        element_id = element_data.get("id", None)
         if element_id:
             self.element_instances[element_id] = element_instance
 
@@ -93,7 +101,7 @@ class NextPyRenderer(object):
 
     def _create_component_element(self, element_data) -> Optional[QWidget]:
         """Create a child component instance"""
-        component_name = element_data.get('name')
+        component_name = element_data.get("name")
         if component_name not in self.components():
             return None
 
@@ -117,12 +125,12 @@ class NextPyRenderer(object):
         )
 
         # Store reference if specified
-        ref = element_data.get('ref')
+        ref = element_data.get("ref")
         if ref:
             self.refs[ref] = component_instance
 
         # Store child component
-        component_id = element_data.get('id', component_name)
+        component_id = element_data.get("id", component_name)
         self.child_components[component_id] = component_instance
 
         # Render the component
@@ -141,7 +149,7 @@ class NextPyRenderer(object):
         Returns:
             Dictionary of properly typed props according to schema
         """
-        if not hasattr(component_class, 'props_schema'):
+        if not hasattr(component_class, "props_schema"):
             return {}
 
         schema = component_class.props_schema
@@ -186,24 +194,26 @@ class NextPyRenderer(object):
 
     def _update_from_html(self, html_content: str):
         """Update widget tree from HTML content"""
-        soup = BeautifulSoup(html_content, 'html.parser')
+        soup = BeautifulSoup(html_content, "html.parser")
 
         # Get the first real element (skip document node)
         root_element = next(
-            (element for element in soup.children
-             if element.name is not None),
-            None
+            (element for element in soup.children if element.name is not None), None
         )
 
         if not root_element:
             return
 
         # Get current and new element states
-        current_state = self._get_element_state(self.main_widget) if self.main_widget else None
+        current_state = (
+            self._get_element_state(self.main_widget) if self.main_widget else None
+        )
         new_state = self._get_element_state_from_soup(root_element)
 
         # Update widget tree
-        self.main_widget = self._update_element_tree(self.main_widget, current_state, new_state)
+        self.main_widget = self._update_element_tree(
+            self.main_widget, current_state, new_state
+        )
 
     def _get_element_state(self, widget: QWidget) -> ElementState | None:
         """Get element state from widget"""
@@ -211,28 +221,23 @@ class NextPyRenderer(object):
             return None
 
         element_instance = next(
-            (inst for inst in self.element_instances.values()
-             if inst.widget == widget),
-            None
+            (inst for inst in self.element_instances.values() if inst.widget == widget),
+            None,
         )
 
         if not element_instance:
             return None
 
         children = [
-            child for child in element_instance.children
-            if child.name is not None
+            child for child in element_instance.children if child.name is not None
         ]
 
         return ElementState(
             element_type=type(element_instance).__name__,
             attributes=element_instance.attrs,
-            content=element_instance.string if element_instance.string else '',
+            content=element_instance.string if element_instance.string else "",
             element=element_instance,
-            children=[
-                self._get_element_state_from_soup(child)
-                for child in children
-            ]
+            children=[self._get_element_state_from_soup(child) for child in children],
         )
 
     def _get_element_state_from_soup(self, element) -> Optional[ElementState]:
@@ -241,23 +246,19 @@ class NextPyRenderer(object):
             return None
 
         # Get all non-empty child elements
-        children = [
-            child for child in element.children
-            if child.name is not None
-        ]
+        children = [child for child in element.children if child.name is not None]
 
         return ElementState(
             element_type=element.name,
             attributes=element.attrs,
             element=element,
-            content=element.string if element.string else '',
-            children=[
-                self._get_element_state_from_soup(child)
-                for child in children
-            ]
+            content=element.string if element.string else "",
+            children=[self._get_element_state_from_soup(child) for child in children],
         )
 
-    def _update_element_tree(self, widget: QWidget, current_state: ElementState, new_state: ElementState):
+    def _update_element_tree(
+        self, widget: QWidget, current_state: ElementState, new_state: ElementState
+    ):
         """Update widget tree based on element states"""
         if not current_state or current_state.element_type != new_state.element_type:
             # Replace entire widget
@@ -270,9 +271,8 @@ class NextPyRenderer(object):
 
         # Update attributes and content
         element_instance = next(
-            (inst for inst in self.element_instances.values()
-             if inst.widget == widget),
-            None
+            (inst for inst in self.element_instances.values() if inst.widget == widget),
+            None,
         )
         if element_instance:
             self._update_element_attributes(element_instance, new_state.attributes)
@@ -293,41 +293,43 @@ class NextPyRenderer(object):
             new_attributes: Dictionary of new attributes to apply
         """
         # Get current attributes
-        current_attributes = getattr(element_instance, 'attributes', {})
+        current_attributes = getattr(element_instance, "attributes", {})
 
         # Skip if attributes are identical
         if current_attributes == new_attributes:
             return
 
         # Update style attributes
-        if 'style' in new_attributes:
-            stylesheet = self._build_stylesheet(new_attributes['style'])
+        if "style" in new_attributes:
+            stylesheet = self._build_stylesheet(new_attributes["style"])
             element_instance.widget.setStyleSheet(stylesheet)
 
         # Update enabled state
-        if 'disabled' in new_attributes:
-            element_instance.widget.setEnabled(not new_attributes['disabled'])
+        if "disabled" in new_attributes:
+            element_instance.widget.setEnabled(not new_attributes["disabled"])
 
         # Update visibility
-        if 'hidden' in new_attributes:
-            element_instance.widget.setVisible(not new_attributes['hidden'])
+        if "hidden" in new_attributes:
+            element_instance.widget.setVisible(not new_attributes["hidden"])
 
         # Update specific widget type attributes
         widget_type = type(element_instance).__name__
 
-        if widget_type == 'NextPyButtonElement':
-            if 'text' in new_attributes:
-                element_instance.widget.setText(new_attributes['text'])
+        if widget_type == "NextPyButtonElement":
+            if "text" in new_attributes:
+                element_instance.widget.setText(new_attributes["text"])
 
-        elif widget_type == 'NextPyInputElement':
-            if 'placeholder' in new_attributes:
-                element_instance.widget.setPlaceholderText(new_attributes['placeholder'])
-            if 'value' in new_attributes:
-                element_instance.widget.setText(new_attributes['value'])
+        elif widget_type == "NextPyInputElement":
+            if "placeholder" in new_attributes:
+                element_instance.widget.setPlaceholderText(
+                    new_attributes["placeholder"]
+                )
+            if "value" in new_attributes:
+                element_instance.widget.setText(new_attributes["value"])
 
-        elif widget_type == 'NextPyCheckboxElement':
-            if 'checked' in new_attributes:
-                element_instance.widget.setChecked(new_attributes['checked'])
+        elif widget_type == "NextPyCheckboxElement":
+            if "checked" in new_attributes:
+                element_instance.widget.setChecked(new_attributes["checked"])
 
         # Store new attributes
         element_instance.attributes = new_attributes
@@ -341,16 +343,16 @@ class NextPyRenderer(object):
             new_content: New content string to set
         """
         # Skip if content hasn't changed
-        current_content = getattr(element_instance, 'content', '')
+        current_content = getattr(element_instance, "content", "")
         if current_content == new_content:
             return
 
         # Update based on widget type
         widget_type = type(element_instance).__name__
 
-        if widget_type in ['NextPyButtonElement', 'NextPyLabelElement']:
+        if widget_type in ["NextPyButtonElement", "NextPyLabelElement"]:
             element_instance.widget.setText(new_content)
-        elif widget_type == 'NextPyInputElement':
+        elif widget_type == "NextPyInputElement":
             # Only update if the input doesn't have focus to avoid disrupting user typing
             if not element_instance.widget.hasFocus():
                 element_instance.widget.setText(new_content)
@@ -358,7 +360,12 @@ class NextPyRenderer(object):
         # Store new content
         element_instance.content = new_content
 
-    def _update_children(self, parent_widget: "QWidget", current_children: list[ElementState], new_children: list[ElementState]):
+    def _update_children(
+        self,
+        parent_widget: "QWidget",
+        current_children: list[ElementState],
+        new_children: list[ElementState],
+    ):
         """
         Update child widgets within a container widget
 
@@ -373,12 +380,10 @@ class NextPyRenderer(object):
 
         # Create maps for current and new children using their IDs or content as keys
         current_map = {
-            self._get_element_key(child): child
-            for child in current_children if child
+            self._get_element_key(child): child for child in current_children if child
         }
         new_map = {
-            self._get_element_key(child): child
-            for child in new_children if child
+            self._get_element_key(child): child for child in new_children if child
         }
 
         # Track processed widgets to handle removals
@@ -396,7 +401,9 @@ class NextPyRenderer(object):
                 # Update existing child
                 widget = layout.itemAt(i).widget() if i < layout.count() else None
                 if widget:
-                    updated_widget = self._update_element_tree(widget, current_child, new_child)
+                    updated_widget = self._update_element_tree(
+                        widget, current_child, new_child
+                    )
                     processed_widgets.add(widget)
                     if updated_widget != widget:
                         layout.replaceWidget(widget, updated_widget)
@@ -431,7 +438,7 @@ class NextPyRenderer(object):
             return None
 
         # Try to get ID from attributes
-        element_id = element_state.attributes.get('id')
+        element_id = element_state.attributes.get("id")
         if element_id:
             return f"id:{element_id}"
 
@@ -448,7 +455,7 @@ class NextPyRenderer(object):
             f"{''.join(f'-{c.lower()}' if c.isupper() else c for c in key).lstrip('-')}: {value};"
             for key, value in style_dict.items()
         ]
-        return ' '.join(stylesheet_parts)
+        return " ".join(stylesheet_parts)
 
     def rerender_component(self, changed_keys: Optional[set] = None):
         """Rerender component, optionally based on changed state keys"""

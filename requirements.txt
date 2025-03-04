@@ -13,6 +13,7 @@ pylint==3.3.4
 PyQt6==6.8.0
 PyQt6-Qt6==6.8.1
 PyQt6_sip==13.10.0
+ruff==0.9.9
 setuptools==75.8.0
 soupsieve==2.6
 tomlkit==0.13.2

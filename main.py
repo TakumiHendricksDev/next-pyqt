@@ -1,9 +1,11 @@
 """main.py"""
+
 from app import TodoApp
 from components.hello_world import HelloWorldApp
 from router import NextPyRouter
 from template_engine import NextPyTemplate
 from window import NextPyWindow
+
 
 def hello_world_component_factory(*kwargs):
     """
@@ -13,16 +15,15 @@ def hello_world_component_factory(*kwargs):
     """
     return HelloWorldApp(template_engine=NextPyTemplate("templates"), *kwargs)
 
+
 def root_component_factory(*kwargs):
     """
     Factory function for creating the TodoApp component
     :param kwargs: kwargs to pass to the component
     :return: A NextPYQT component
     """
-    return TodoApp(
-        template_engine=NextPyTemplate("templates"),
-        *kwargs
-    )
+    return TodoApp(template_engine=NextPyTemplate("templates"), *kwargs)
+
 
 # Usage example:
 if __name__ == "__main__":

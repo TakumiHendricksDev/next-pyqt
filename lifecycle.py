@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class NextPyComponentLifecycle(ABC):
     @abstractmethod
     def component_did_mount(self):
